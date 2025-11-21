@@ -15,12 +15,13 @@ struct TraceEntry {
 
 class FunctionTracer {
 public:
-    static const int MAX_TRACES = 1000;
+    static const int MAX_TRACES = 15;
     static TraceEntry traces[MAX_TRACES];
     static int trace_count;
     static int current_depth;
 
-    static void init() {
+    static void init() {  ///for stacktrace
+
         trace_count = 0;
         current_depth = 0;
         memset(traces, 0, sizeof(traces));
@@ -37,11 +38,13 @@ public:
         trace_count++;
     }
 
-    static void exit_function() {
+    static void exit_function() {  ///for stacktrace
+        trace_count--;
         if (current_depth > 0) current_depth--;
     }
 
-    static void dump_trace(Console &console, bool skip = true) {
+    static void dump_trace(Console &console, bool skip = false) {
+        console.writeLine("\nFunctions stack trace:");
         int skipcount = 4;
         for (int i = 0; i < trace_count; i++) {
             if (skip && i < skipcount) continue;
@@ -61,7 +64,8 @@ public:
     }
 
 private:
-    static uint32_t read_timer() {
+    static uint32_t read_timer() {  ///for stacktrace
+
         static uint32_t ticks = 0;
         return ticks++;
     }
@@ -71,7 +75,7 @@ TraceEntry FunctionTracer::traces[MAX_TRACES];
 int FunctionTracer::trace_count = 0;
 int FunctionTracer::current_depth = 0;
 
-#define TRACE_ME FunctionTracerRAII __tracer_raii(__func__, __builtin_return_address(0))
+#define TRACE_ME FunctionTracerRAII __tracer_raii(TRACE, (int)__builtin_return_address(0));
 
 class FunctionTracerRAII {
     const char *name;
@@ -80,7 +84,8 @@ public:
         FunctionTracer::enter_function(func_name, addr);
     }
 
-    ~FunctionTracerRAII() {
+    ~FunctionTracerRAII() {  ///for stacktrace
+
         FunctionTracer::exit_function();
     }
 };
@@ -96,5 +101,7 @@ extern "C" void __cyg_profile_func_exit(void *this_fn, void *call_site) {
     FunctionTracer::exit_function();
 }
 
-extern "C" void _Unwind_Resume() { while (1); }
-extern "C" void __gxx_personality_v0() { while (1); }
+extern "C" void _Unwind_Resume() {  ///for stacktrace
+ while (1); }
+extern "C" void __gxx_personality_v0() {  ///for stacktrace
+ while (1); }

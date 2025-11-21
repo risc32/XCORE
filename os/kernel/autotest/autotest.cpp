@@ -24,13 +24,16 @@ void check(TestResult *resbuf, unsigned short *cbuf, Console console, int count)
     if (!score) {
         memcpy((void *) 0xB8000, cbuf, 4000);
 
-        panic("");
+        stop();
     }
 }
 
-void autotest() {
-    unsigned short cbuf[4000];
+void autotest() {  ///for stacktrace
+
+    unsigned short cbuf[4000] = {};
     Console console = Console(cbuf);
+    //console.set_color(LI, MAGENTA);
+
     console.writeLine("KERNEL PANIC\n");
     console.writeLine("AUTOTEST FAILED");
     TestResult resbuf[20] = {};

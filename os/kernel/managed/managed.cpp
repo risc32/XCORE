@@ -4,85 +4,105 @@
 #include "../cpu/cpu.cpp"
 //#include "initlist.cpp"
 
+#define CAPACITY 32
+
+template<typename T>
+T move(T&& obj) {
+    return obj;
+}
+
 template<typename T>
 class managed {
 protected:
     T *_data;
-    int _size = 0;
-    int _capacity = 16;
-
+    uint64_t _size = 0;
+    uint64_t _capacity = CAPACITY;
     bool nullend = false;
 
     void grow_if_needed() {
         if (_size >= _capacity) {
-            _capacity = _capacity ? _capacity * 2 : 16;
-            _data = (T *) realloc(_data, _capacity * sizeof(T));
+            while (_size >= _capacity) _capacity = max(CAPACITY, _capacity * 2);
+            *this = managed<T>(*this);
         }
     }
 
 public:
+    managed() : _size(0), _capacity(CAPACITY), nullend(false) {
+        _data = (T *)(calloc(_capacity, sizeof(T)));
+    }
 
-    managed() : _data(nullptr), _size(0), _capacity(0) {}
-
-    explicit managed(int capacity) {
-        _capacity = capacity > 0 ? capacity : 16;
-        _data = (T *) (calloc(_capacity, sizeof(T)));
+    explicit managed(uint64_t capacity) : nullend(false) {
+        _capacity = capacity > 0 ? capacity : CAPACITY;
+        _data = (T *)(calloc(_capacity, sizeof(T)));
         _size = 0;
     }
 
-    managed(const managed<T>& other) {
+    managed(const managed<T>& other) : nullend(other.nullend) {
         _capacity = other._capacity;
         _size = other._size;
-        _data = (T *) (calloc(_capacity, sizeof(T)));
-        memcpy(_data, other._data, _size * sizeof(T));
+        _data = (T*)calloc(_capacity, sizeof(T));
+        if (!_capacity) _capacity = CAPACITY;
+        if (!_data) panic("Out of memory");
+
+        for (int i = 0; i < _size; ++i) {
+            _data[i] = other._data[i];
+        }
+
+        // Добавляем нуль-терминатор если нужно
+        if (nullend && _size < _capacity) {
+            _data[_size] = T();
+        }
     }
 
-    managed(managed<T>&& other) noexcept {
-        _data = other._data;
-        _size = other._size;
-        _capacity = other._capacity;
-
-        other._data = nullptr;
-        other._size = 0;
-        other._capacity = 0;
+    managed(uint64_t count, T elem) : _size(0), _capacity(CAPACITY), nullend(false) {
+        _data = (T *)(calloc(_capacity, sizeof(T)));
+        for (int i = 0; i < count; ++i) {
+            push_back(elem);
+        }
     }
 
     ~managed() {
+        for (int i = 0; i < _size; ++i) {
+            _data[i].~T();
+        }
         free(_data);
     }
 
     managed<T>& operator=(const managed<T>& other) {
         if (this != &other) {
-            free(_data);
-            _capacity = other._capacity;
-            _size = other._size;
-            _data = (T *) (calloc(_capacity, sizeof(T)));
-            memcpy(_data, other._data, _size * sizeof(T));
-        }
-        return *this;
-    }
+            T* new_data = (T*)calloc(other._capacity, sizeof(T));
+            if (!other._capacity) panic("Capacity is null");
 
-    managed<T>& operator=(managed<T>&& other) noexcept {
-        if (this != &other) {
+            if (!new_data) panic("Out of memory");
+
+            for (int i = 0; i < other._size; ++i) {
+                new_data[i] = other._data[i];
+            }
+
             free(_data);
-            _data = other._data;
+            _data = new_data;
             _size = other._size;
             _capacity = other._capacity;
+            nullend = other.nullend;
 
-            other._data = nullptr;
-            other._size = 0;
-            other._capacity = 0;
+            // Добавляем нуль-терминатор если нужно
+            if (nullend && _size < _capacity) {
+                _data[_size] = T();
+            }
         }
         return *this;
     }
 
     void push_back(const T& value) {
         insert(_size, value);
-
     }
 
     void push_back(T&& value) {
-        insert(_size, value);
+        insert(_size, move(value));
+    }
+
+    void pop_back() {
+        remove(_size - 1);
     }
 
     void insert(int index, const T& value) {
@@ -95,6 +115,11 @@ public:
         }
         _data[index] = value;
         _size++;
+
+        // Обновляем нуль-терминатор если нужно
+        if (nullend && _size < _capacity) {
+            _data[_size] = T();
+        }
     }
 
     void remove(int index) {
@@ -104,6 +129,11 @@ public:
             _data[i] = _data[i + 1];
         }
         _size--;
+
+        // Обновляем нуль-терминатор если нужно
+        if (nullend && _size < _capacity) {
+            _data[_size] = T();
+        }
     }
 
     T &operator[](int index) {
@@ -123,18 +153,8 @@ public:
     }
 
     managed<T> operator+(const managed<T>& other) const {
-        managed<T> res;
-        res._capacity = _size + other._size;
-        res._data = (T *) (calloc(res._capacity, sizeof(T)));
-
-        if (_size > 0) {
-            memcpy(res._data, _data, _size * sizeof(T));
-        }
-        if (other._size > 0) {
-            memcpy(res._data + _size, other._data, other._size * sizeof(T));
-        }
-
-        res._size = _size + other._size;
+        managed<T> res = *this;
+        res += other;
         return res;
     }
 
@@ -144,39 +164,37 @@ public:
     }
 
     managed<T>& operator+=(const T&& value) {
-        push_back(value);
+        push_back(move(value));
         return *this;
     }
 
     managed<T>& operator+=(const managed<T>& other) {
         int old_size = _size;
         _size += other._size;
+        grow_if_needed();
 
-        if (_size > _capacity) {
-            _capacity = _size;
-            _data = (T *) realloc(_data, _capacity * sizeof(T));
+        for (int i = 0; i < other._size; ++i) {
+            _data[old_size + i] = other._data[i];
         }
 
-        if (other._size > 0) {
-            memcpy(_data + old_size, other._data, other._size * sizeof(T));
+        // Обновляем нуль-терминатор если нужно
+        if (nullend && _size < _capacity) {
+            _data[_size] = T();
         }
-
         return *this;
     }
 
     bool operator==(const managed<T>& other) const {
         if (_size != other._size) return false;
-        for (int i = 0; i < _size; i++) {
+
+        for (int i = 0; i < _size; ++i) {
             if (_data[i] != other._data[i]) return false;
         }
         return true;
     }
 
     bool operator!=(const managed<T>& other) const {
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "Simplify"
         return !(*this == other);
-#pragma clang diagnostic pop
     }
 
     T *data() {
@@ -187,11 +205,11 @@ public:
         return _data;
     }
 
-    int size() const {
+    uint64_t size() const {
         return _size;
     }
 
-    int capacity() const {
+    uint64_t capacity() const {
         return _capacity;
     }
 
@@ -201,12 +219,32 @@ public:
 
     void clear() {
         _size = 0;
+        if (nullend && _capacity > 0) {
+            _data[0] = T();
+        }
     }
 
     void reserve(int new_capacity) {
         if (new_capacity > _capacity) {
             _capacity = new_capacity;
             _data = (T *) realloc(_data, _capacity * sizeof(T));
+
+            // Добавляем нуль-терминатор если нужно
+            if (nullend && _size < _capacity) {
+                _data[_size] = T();
+            }
+        }
+    }
+
+    void setsize(int newsize) {
+        if (newsize > _capacity) {
+            reserve(newsize);
+        }
+        _size = newsize;
+
+        // Добавляем нуль-терминатор если нужно
+        if (nullend && _size < _capacity) {
+            _data[_size] = T();
         }
     }
 
@@ -214,23 +252,21 @@ public:
         if (_size < _capacity) {
             _capacity = _size > 0 ? _size : 1;
             _data = (T *) realloc(_data, _capacity * sizeof(T));
+
+            // Добавляем нуль-терминатор если нужно
+            if (nullend) {
+                // Для nullend всегда должен быть дополнительный байт для терминатора
+                _capacity = _size + 1;
+                _data = (T *) realloc(_data, _capacity * sizeof(T));
+                _data[_size] = T();
+            }
         }
     }
 
-//    managed(initializer_list<T> init) {
-//        _capacity = init.size() > 0 ? init.size() : 16;
-//        _data = (T *)calloc(_capacity, sizeof(T));
-//        _size = 0;
-//        for (const T& item : init) {
-//            push_back(item);
-//        }
-//    }
-
     template<size_t N>
-    managed(const T (&array)[N]) {
-        _capacity = N > 0 ? N : 16;
+    explicit managed(const T (&array)[N]) : _size(0), nullend(false) {
+        _capacity = N > 0 ? N : CAPACITY;
         _data = (T *)calloc(_capacity, sizeof(T));
-        _size = 0;
         for (size_t i = 0; i < N; i++) {
             push_back(array[i]);
         }
@@ -238,7 +274,7 @@ public:
 
     template<size_t N>
     managed<T>& operator+=(const T (&array)[N]) {
-        for (size_t i = 0; i < (nullend ? (N-1) : N); i++) {
+        for (size_t i = 0; i < N; i++) {
             push_back(array[i]);
         }
         return *this;
@@ -247,10 +283,26 @@ public:
     template<size_t N>
     managed<T> operator+(const T (&array)[N]) const {
         managed<T> res(*this);
-        for (size_t i = 0; i < (nullend ? (N-1) : N); i++) {
+        for (size_t i = 0; i < N; i++) {
             res.push_back(array[i]);
         }
         return res;
+    }
+
+    T* begin() {
+        return _data;
+    }
+
+    const T* begin() const {
+        return _data;
+    }
+
+    T* end() {
+        return _data + _size;
+    }
+
+    const T* end() const {
+        return _data + _size;
     }
 };
 

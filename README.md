@@ -103,14 +103,14 @@ qemu-system-i386 -drive format=raw,file=os.img
 ### More Detailed Examples
 1. Memory Management:
 ```cpp
-// Allocate memory
+
 void* ptr = allocate(64);
 memset(ptr, 0, 64);
 
-// Reallocate memory
+
 ptr = realloc(ptr, 128);
 
-// Free memory
+
 free(ptr);
 ```
 

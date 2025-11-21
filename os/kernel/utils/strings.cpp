@@ -14,3 +14,14 @@ size_t strlen(const char *str) {
 
     return length;
 }
+
+int count_digits(int num, int base = 10) {
+    if (num == 0) return 1;
+
+    int count = 0;
+    while (num != 0) {
+        num /= base;
+        count++;
+    }
+    return count;
+}

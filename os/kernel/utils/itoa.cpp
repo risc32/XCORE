@@ -2,7 +2,7 @@
 
 char digit_to_char(int digit) {
     if (digit >= 0 && digit <= 9) return '0' + digit;
-    if (digit >= 10 && digit <= 35) return 'a' + (digit - 10);
+    if (digit >= 10 && digit <= 35) return 'A' + (digit - 10);
     return '?';
 }
 

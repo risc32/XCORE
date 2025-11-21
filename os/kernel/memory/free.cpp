@@ -5,7 +5,17 @@
 void free(void *ptr) {
     if (!ptr) return;
 
-    auto *block = (memory_block *) ((char *) ptr - sizeof(memory_block));
+    // Проверяем, что указатель находится в пределах кучи
+    if (ptr < (void*)memory::heap || ptr >= (void*)(memory::heap + sizeof(memory::heap))) {
+        return; // Некорректный указатель
+    }
+
+    auto *block = (memory_block *)((char *)ptr - sizeof(memory_block));
+
+    // Проверяем сигнатуру или другие метаданные блока
+    if (block->mbid < 0 || block->mbid >= memory::mbids) {
+        return; // Некорректный блок
+    }
 
     block->used = false;
 

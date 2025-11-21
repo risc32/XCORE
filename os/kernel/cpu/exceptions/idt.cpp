@@ -35,7 +35,8 @@ void register_interrupt_handler(uint8_t n, isr_t handler) {
 #define GATE(x)    idt_set_gate(x,  (uint32_t)isr##x, 0x08, 0x8E);
 
 
-void init_idt() {
+void init_idt() {  ///for stacktrace
+
     idtp.limit = (sizeof(idt_entry_t) * 256) - 1;
     idtp.base = (uint32_t) &idt;
 

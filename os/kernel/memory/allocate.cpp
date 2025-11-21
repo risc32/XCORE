@@ -1,6 +1,7 @@
 #pragma once
 
 #include "memory.cpp"
+#include "../stream/cstatic.cpp"
 
 void *allocate(size_t size) {
     if (!size) return nullptr;
@@ -8,29 +9,37 @@ void *allocate(size_t size) {
     size = memory::align_size(size);
     memory_block *block = memory::first;
 
-    while (block->used || block->size < size) {
-        if (block->next == nullptr) return nullptr;
+    while (block) {
+        if (!block->used && block->size >= size) {
+            // Нашли подходящий блок
+            size_t remaining = block->size - size;
+
+            // Проверяем, можно ли разделить блок
+            if (remaining >= sizeof(memory_block) + MINB_SIZE) {
+                auto *new_block = (memory_block *)(
+                        (char *)block + sizeof(memory_block) + size
+                );
+
+                new_block->size = remaining - sizeof(memory_block);
+                new_block->used = false;
+                new_block->next = block->next;
+                new_block->back = block;
+
+                if (block->next) {
+                    block->next->back = new_block;
+                }
+
+                block->size = size;
+                block->next = new_block;
+            }
+
+            block->used = true;
+            block->mbid = memory::mbids++;
+            return (void *)((char *)block + sizeof(memory_block));
+        }
         block = block->next;
     }
-
-    block->used = true;
-
-    size_t rem = block->size - size;
-    if (rem >= sizeof(memory_block) + MINB_SIZE) {
-        auto *new_block = (memory_block *) (
-                (char *) block + sizeof(memory_block) + size
-        );
-
-        new_block->size = rem - sizeof(memory_block);
-        new_block->used = false;
-        new_block->next = block->next;
-        new_block->back = block;
-
-        block->size = size;
-        block->next = new_block;
-    }
-
-    return (void *) ((char *) block + sizeof(memory_block));
+    return nullptr;
 }
 
 void *calloc(size_t num, size_t size) {

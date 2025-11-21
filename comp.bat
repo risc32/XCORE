@@ -3,30 +3,29 @@
 fasm os/boot.asm build/boot.bin
 if errorlevel 1 exit /b 1
 
-i686-elf-g++ -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive
+gcc os/kernel/kernel.cpp -o prep.cpp -Wall -E -DPREP -Wchanges-meaning
+gcc os/kernel/kernel.cpp -o prep.asm -Wall -S -DPREP -Wchanges-meaning -fpermissive
+if errorlevel 1 exit /b 1
+
+i686-elf-g++ -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -Wall -fno-use-cxa-atexit -Wchanges-meaning -O0
 
 rem -finstrument-functions
 rem -finstrument-functions -finstrument-functions-exclude-file-list=os/kernel/cpu/trace.cpp
 if errorlevel 1 exit /b 1
 
-gcc os/kernel/kernel.cpp -o prep.cpp -E -fpermissive
-gcc os/kernel/kernel.cpp -o prep.asm -S -fpermissive
+i686-elf-ld -o build/kernel.bin -Ttext 0x10000 --oformat binary build/kernel.o -O0
 if errorlevel 1 exit /b 1
 
-i686-elf-ld -o build/kernel.bin -Ttext 0x10000 --oformat binary build/kernel.o
-if errorlevel 1 exit /b 1
+del os.img
 
-rem i686-elf-nm -nC text build/kernel.bin > kernel.syms
-
-
-dd if=/dev/zero of=os.img bs=512 count=4096
+dd if=/dev/zero of=os.img bs=512 count=2048
 if errorlevel 1 exit /b 1
 
 dd if=build/boot.bin of=os.img bs=512 count=1 conv=notrunc
 if errorlevel 1 exit /b 1
 
-dd if=build/kernel.bin of=os.img bs=512 seek=1 conv=notrunc
+dd if=build/kernel.bin of=os.img bs=512 seek=39 conv=notrunc
 if errorlevel 1 exit /b 1
 
 
-qemu-system-i386 -drive format=raw,file=os.img -monitor stdio
+qemu-system-x86_64 -drive format=raw,file=os.img -monitor stdio

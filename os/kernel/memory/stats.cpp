@@ -12,7 +12,8 @@ struct stats {
     size_t fragmentation;
 };
 
-stats get_stats() {
+stats get_stats() {  ///for stacktrace
+
     stats stats = {0};
 
     memory_block *current = memory::first;

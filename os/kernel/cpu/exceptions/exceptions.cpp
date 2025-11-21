@@ -1,8 +1,6 @@
 #pragma once
 
-void panic(char *message);
-
-#include "../../kernel.cpp"
+#include "../../console.cpp"
 #include "../../types/scalar.cpp"
 #include "../registers.cpp"
 
@@ -14,22 +12,50 @@ struct exception {
     const static char *messages[];
     static isr_t interrupt_handlers[256];
 
-    static void init() {
+    static void init() {  ///for stacktrace
+
         init_idt();
     }
 };
 
-void panic(const char *message) {
-    Console console = Console();
-    console.clear();
+#define panic(x) _panic(TRACE, x)
 
+[[noreturn]] void _panic(const char* func, const char *message) {
+    Console& console = _kcons::console;
+    console.set_color(RED, BLACK);
+    console.writeLine("\n\n");
+    int cy = console.cursor_y;
+    for (int i = 0; i < 80; ++i) {
+        console.write("=");
+    }
+    console.place(" FAULT ", 36, cy);
+    console.writeLine("");
+    console.reset_color();
+
+    console.write("KERNEL PANIC\nPress space for more information\nin ");
+    console.writeLine(func);
+    console.write("\nMessage: ");
+    console.write(message);
+    console.writeLine("");
+    while (' ' != console.readChar()) {}
+    console.clear();
     console.write("KERNEL PANIC: ");
     console.writeLine(message);
+    console.write("in ");
+    console.writeLine(func);
+
 
     debug_print_stacktrace(console);
     FunctionTracer::dump_trace(console);
 
     console.writeLine("System halted");
+    //if(interrupt) console.place("PROCESSOR INTERRUPT", 0, 24 );
+
+    while (true) { asm volatile ("hlt"); }
+}
+
+void stop() {  ///for stacktrace
+
     while (true) { asm volatile ("hlt"); }
 }
 

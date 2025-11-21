@@ -9,7 +9,7 @@ extern "C" void universal_fault_handler(uint32_t int_no, uint32_t err_code) {
 
     get_basic_registers(&regs);
 
-    regs.int_no = int_no;
+    regs.int_no = err_code;
     regs.err_code = err_code;
 
     uint32_t current_esp;
@@ -40,7 +40,8 @@ extern "C" void universal_fault_handler(uint32_t int_no, uint32_t err_code) {
 
 
 #define ISR_NO_ERROR(num) \
-extern "C" void isr##num() { \
+extern "C" void isr##num() {  \
+ \
     asm volatile ( \
         "pushl $0\n\t"           /* фиктивный код ошибки */ \
         "pushl $" #num "\n\t"     /* номер исключения */ \
@@ -50,13 +51,15 @@ extern "C" void isr##num() { \
 
 #define ISR_ERROR(num) \
 extern "C" void isr##num() { \
+ \
     asm volatile ( \
         "pushl $" #num "\n\t"     /* номер исключения (код ошибки уже на стеке) */ \
         "jmp isr_common" \
     ); \
 }
 
-extern "C" void isr_common() {
+extern "C" void isr_common() {  ///for stacktrace
+
     asm volatile (
             "pusha\n\t"
             "pushl %ds\n\t"

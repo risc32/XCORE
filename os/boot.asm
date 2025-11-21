@@ -2,8 +2,6 @@ format binary as 'img'
 use16
 org 0x7C00
 
-
-
 start:
     ; Инициализация
     xor ax, ax
@@ -20,11 +18,11 @@ start:
     mov ax, 0x1000      ; ES:BX = 0x1000:0x0000
     mov es, ax
     xor bx, bx
-    
+
     mov ah, 0x02
-    mov al, 64           ; 32KB
+    mov al, 128           ; 64KB
     mov ch, 0
-    mov cl, 2
+    mov cl, 40
     mov dh, 0
     mov dl, 0x80
     int 0x13

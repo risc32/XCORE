@@ -56,3 +56,5 @@
 
 #define KERNEL_BASE 0x100000
 #define VIDEO_MEMORY 0xB8000
+
+#define SECOND 39

@@ -63,8 +63,8 @@ int str_to_int(const char *str, char **endptr, int base) {
     return sign * result;
 }
 
-int atoi(const char *str) {
-    return str_to_int(str, nullptr, 10);
+int atoi(const char *str, int base = 10) {
+    return str_to_int(str, nullptr, base);
 }
 
 int atoi_hex(const char *str) {

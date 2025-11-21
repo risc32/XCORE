@@ -32,5 +32,20 @@ void memset(void *dest, int value, size_t count) {
 }
 
 void memzero(void *dest, size_t count) {
-    memset(dest, 0, count);
+    if (count >= 64) {
+
+        asm volatile (
+                "cld\n\t"
+                "mov %0, %%edi\n\t"
+                "mov %1, %%ecx\n\t"
+                "xor %%eax, %%eax\n\t"
+                "rep stosb\n\t"
+                :
+                : "r" (dest), "r" (count)
+                : "eax", "ecx", "edi", "memory"
+                );
+    } else {
+
+        memset(dest, 0, count);
+    }
 }

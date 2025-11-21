@@ -1,152 +1,150 @@
 #pragma once
 
-#include "../memory/memory.cpp"
-#include "basic.cpp"
-#include "../console.cpp"
+#include "../cpu/cpu.cpp"
+#include "../stream/stream.cpp"
+#include "../utils/inited.cpp"
 
-void parse_cmd(const char *s, char **argv, int max_args) {
-    if (s == 0 || argv == 0 || max_args <= 0) {
-        return;
+typedef const managed<string>& argt;
+int checkargs(argt args, int v) {
+    KernelOut kout;
+    if (args.size() < v) {
+        kout << "Incorrect number of arguments";
+        return 1;
     }
-
-    for (int i = 0; i < max_args; i++) {
-        argv[i] = 0;
-    }
-
-    int arg_count = 0;
-    const char *start = s;
-    bool in_quotes = false;
-
-    while (*s != '\0' && arg_count < max_args - 1) {
-        while (*s == ' ' && !in_quotes) {
-            s++;
-            start = s;
-        }
-
-        if (*s == '\0') break;
-
-        if (*s == '"') {
-            in_quotes = !in_quotes;
-            start = s + 1;
-            s++;
-            continue;
-        }
-
-        if ((*s == ' ' && !in_quotes) || *(s + 1) == '\0') {
-            const char *end = s;
-
-            if (*(s + 1) == '\0' && *s != ' ') {
-                end = s + 1;
-            }
-
-            if (end > start) {
-                int length = end - start;
-                argv[arg_count] = (char *) allocate(length + 1);
-
-                for (int i = 0; i < length; i++) {
-                    argv[arg_count][i] = start[i];
-                }
-                argv[arg_count][length] = '\0';
-                arg_count++;
-            }
-
-            start = s + 1;
-        }
-
-        s++;
-    }
-
-    argv[arg_count] = 0;
+    return 0;
 }
 
-struct command {
-    char *name;
+#define CHECK(x) {if (checkargs(args, x)) return 1;}
 
-    void (*func)(char **);
+enum gettype {
+    id,
+    addr,
+    offset
 };
 
+void* parseaddr(string s) {
+    gettype type;
+    memory_block* block = nullptr;
+    switch (s[0]) {
+        case '@':
+            type = gettype::addr;
+            block = (memory_block*)to_int(s, 16);
+            break;
+        case 'x':
+            type = gettype::offset;
+            block = (memory_block*)(((uint32_t)memory::heap) + (uint32_t)to_int(s, 16));
+            break;
+        default:
+            type = gettype::id;
+            block = getbyid(to_int(s));
+            break;
+    }
+    return block;
+}
+
+void blockinfo(KernelOut kout, memory_block* block) {
+    bool used = block->used;
+    kout << setw(10) << dec << block->mbid << hex << used << wstring("@") + to_wstring((uint32_t)block, 16) << wstring("x") + to_wstring((uint32_t)block - (uint32_t)memory::heap, 16) << dec << block->size << endl;
+}
+
+void blocktable(KernelOut kout) {
+    kout << setw(10) << "dMBID" << "bUSED" << "xADDRESS" << "xOFFSET" << "dSIZE" << endl;
+
+}
+
+void oneblockinfo(memory_block*  block) {
+    KernelOut kout;
+    blocktable(kout);
+    blockinfo(kout, block);
+}
+
+#include "basic.cpp"
+#include "ram.cpp"
+#include "disk.cpp"
+
+struct pcommand {
+    string name;
+    managed<string> args;
+};
+
+
+struct command {
+    string name;
+    int (*func)(argt);
+};
+
+pcommand parse_cmd(const string& com) {
+    pcommand res = {};
+    istream s(com);
+    KernelOut kout;
+
+    s >> res.name;
+    while(s.good()) {
+        wstring data = s.getdata();
+        res.args.push_back(string(data.data()));
+    }
+
+    return res;
+    //s.opera;
+}
+
+
+
 struct cmd {
-    static command commands[32];
-    static int command_count;
+    static managed<command> commands;
 
-    static void init() {
-        for (int i = 0; i < 32; i++) {
-            commands[i].name = 0;
-            commands[i].func = 0;
-        }
-        command_count = 0;
+    static void init() {  ///for stacktrace
 
+        commands = managed<command>();
         add_command("reboot", reboot);
         add_command("shutdown", shutdown);
         add_command("help", help);
+        add_command("ram", ram);
+        add_command("disk", disk);
     }
 
-    static void add_command(const char *name, void (*func)(char **)) {
-        if (command_count >= 32) return;
-
-        commands[command_count].name = (char *) name;
-        commands[command_count].func = func;
-        command_count++;
+    static void add_command(const string& name, int (*func)(argt)) {
+        commands.push_back(command {
+            name, func
+        });
     }
 
-    static void execute(char *s, Console console) {
+    static void execute(string com) {
+        KernelOut kout = {};
+        //kout << (com.size()) << endl;
+        pcommand pcom = parse_cmd(com);
 
-        if (s == 0 || s[0] == '\0') {
-            return;
-        }
 
-        char *argv[32];
-        parse_cmd(s, argv, 32);
 
-        if (argv[0] == 0) {
-            return;
-        }
 
-        for (int i = 0; i < command_count; i++) {
-            if (commands[i].name != 0 && commands[i].func != 0) {
-                const char *cmd_name = commands[i].name;
-                const char *arg_name = argv[0];
-                console.write("COMMAND: ");
-                console.writeLine(cmd_name);
-                console.write("ARG: ");
-                console.writeLine(arg_name);
+        //kout << string("abcdabcdabcdabcdabcd");
 
-                bool match = true;
-                for (int j = 0; cmd_name[j] != '\0' || arg_name[j] != '\0'; j++) {
-                    if (cmd_name[j] != arg_name[j]) {
-                        match = false;
-                        break;
-                    }
-                }
+        for (command ccom : commands) {
+            if (pcom.name == ccom.name) {
 
-                if (match) {
-                    commands[i].func(argv);
-                    return;
-                }
+                int f = ccom.func(pcom.args);
+                kout << endl << wstring("Command executed with exit code: ") << f << endl;
+                return;
             }
         }
 
-        console.write("Command not found: ");
-        console.writeLine(argv[0]);
-        console.writeLine("Type 'help' for available commands");
+        kout << "Command not found: " << pcom.name << endl;
+        kout << "Type 'help' for available commands";
     }
 
 private:
-    static void help(char **argv) {
-        Console console;
-        console.writeLine("Available commands:");
+    static int help(argt) {
+        KernelOut kout;
 
-        for (int i = 0; i < command_count; i++) {
-            if (commands[i].name != 0) {
-                console.write("  ");
-                console.writeLine(commands[i].name);
-            }
+        int counter = 0;
+        for (command com : commands) {
+            kout << ++counter << ". " << com.name << endl;
         }
 
-        console.writeLine("");
-        console.writeLine("Use 'help <command>' for more information");
+        kout << endl << ("Use 'help <command>' for more information") << endl;
+        return 0;
     }
-};
 
-command cmd::commands[32];
-int cmd::command_count = 0;
+
+};
+managed<command> cmd::commands = managed<command>();

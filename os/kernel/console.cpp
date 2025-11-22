@@ -333,7 +333,7 @@ public:
         int offset = y * 80 + x;
         for (int i = 0; str[i] != '\0'; i++) {
             buffer[offset] = (attribute << 8) | str[i];
-            offset++; // Добавляем эту строку!
+            offset++;
         }
     }
     void write(const char *str) {

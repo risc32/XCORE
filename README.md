@@ -1,157 +1,152 @@
-# XCore: A Minimalist x86 Operating System Kernel with Memory Management
+# Документация по использованию ядра XCore
 
-XCore is a lightweight, bare-metal operating system kernel written in C++ that provides essential memory management, CPU exception handling, and console I/O functionality for x86 architecture. It features a custom memory allocator, CPU exception handling, and a basic console interface, making it suitable for educational purposes and embedded systems development.
+## Общая информация
 
-The kernel implements core operating system functionality including:
-- A custom memory management system with allocation, deallocation, and garbage collection
-- CPU exception handling and interrupt management
-- Basic console I/O with keyboard input support
-- Automated testing framework for kernel components
-- Boot loader implementation for x86 architecture
-- Memory operations like memcpy, memset, memmove with alignment support
-- String manipulation utilities and managed string class
+**XCore** - это операционная система с собственным ядром, написанным на C++. Ядро предоставляет базовые функции управления памятью, вводом-выводом, файловой системой и командами для взаимодействия с системой.
 
-## Repository Structure
-```
-.
-├── CMakeLists.txt          # CMake build configuration
-├── comp.bat                # Build and run script for Windows
-├── os/                     # Core operating system source code
-│   ├── boot.asm           # x86 bootloader implementation
-│   └── kernel/            # Kernel source code
-│       ├── autotest/      # Automated testing framework
-│       ├── cmd/           # Command line interface
-│       ├── cpu/           # CPU management and exception handling
-│       ├── memory/        # Memory management implementation
-│       ├── managed/       # Managed memory and string classes
-│       ├── types/         # Core data type definitions
-│       └── utils/         # Utility functions
-```
+## Запуск системы
 
-## Usage Instructions
-### Prerequisites
-- i686-elf cross compiler toolchain
-- FASM (Flat Assembler) for boot code assembly
-- QEMU for system emulation
-- CMake 3.28 or higher
-- A C++14 compatible compiler
+При загрузке ядро автоматически:
+- Инициализирует обработчики исключений
+- Настраивает консоль ввода-вывода
+- Инициализирует драйвер диска
+- Запускает автоматическое тестирование компонентов
+- Монтирует файловую систему XCFS
 
-For compilable languages (e.g. C, C++, C#) provide a list of compiler configuation as prerequisites.
+После загрузки появляется приглашение командной строки `> `.
 
-### Installation
+## Файловая система XCFS
 
-#### MacOS
-```bash
-# Install required tools
-brew install i686-elf-gcc
-brew install fasm
-brew install qemu
-brew install cmake
+XCore использует собственную файловую систему XCFS версии 2.1 с поддержкой:
+- Дерева AVL для эффективного хранения файлов и директорий
+- Битмапов для управления свободным пространством
+- Метаданных файлов (разрешения, временные метки)
+- Фрагментированного хранения данных
 
-# Clone and build
-git clone <repository-url>
-cd xcore
-mkdir build && cd build
-cmake ..
-make
-```
+## Доступные команды
 
-#### Linux/Debian
-```bash
-# Install required tools
-sudo apt-get install i686-elf-gcc
-sudo apt-get install fasm
-sudo apt-get install qemu-system-x86
-sudo apt-get install cmake
+### Системные команды
 
-# Clone and build
-git clone <repository-url>
-cd xcore
-mkdir build && cd build
-cmake ..
-make
-```
+#### `help`
+Показывает список всех доступных команд.
 
-#### Windows
-```batch
-# Install required tools (using scoop or chocolatey)
-scoop install i686-elf-gcc
-scoop install fasm
-scoop install qemu
-scoop install cmake
+#### `reboot`
+Перезагружает систему.
 
-# Clone and build
-git clone <repository-url>
-cd xcore
-mkdir build
-cd build
-cmake ..
-ninja
-```
+#### `shutdown`
+Выключает систему.
 
-### Quick Start
-1. Build the kernel:
-```batch
-comp.bat
-```
+### Управление памятью (команды `ram`)
 
-2. Run in QEMU:
-```batch
-qemu-system-i386 -drive format=raw,file=os.img
-```
+#### `ram info`
+Показывает общую информацию о памяти:
+- Размер heap-памяти
+- Адрес heap
+- Используемое и свободное пространство
+- Количество блоков памяти
 
-### More Detailed Examples
-1. Memory Management:
+#### `ram showfree`
+Показывает список свободных блоков памяти.
+
+#### `ram get <идентификатор>`
+Показывает информацию о конкретном блоке памяти.
+Поддерживаемые форматы идентификаторов:
+- `123` - по ID блока
+- `@0x1234` - по абсолютному адресу
+- `x1000` - по смещению от начала heap
+
+#### `ram alloc <размер>`
+Выделяет блок памяти указанного размера.
+
+#### `ram realloc <блок> <новый_размер>`
+Изменяет размер существующего блока памяти.
+
+#### `ram free <блок>`
+Освобождает блок памяти.
+
+#### `ram place <адрес> <данные>`
+Записывает данные по указанному адресу.
+
+#### `ram snap <адрес>`
+Показывает снимок памяти вокруг указанного адреса.
+
+#### `ram browse <адрес>`
+Интерактивный просмотр памяти:
+- `w` - прокрутка вверх
+- `s` - прокрутка вниз
+- `пробел` - выход
+
+### Работа с диском (команды `disk`)
+
+#### `disk info`
+Показывает информацию о диске и файловой системе:
+- Версия XCFS
+- Базовый порт
+- Размер диска
+- Размер сектора
+- Общее количество секторов
+- Поддержка LBA48
+
+#### `disk readsec <сектор>`
+Читает и отображает содержимое указанного сектора.
+
+#### `disk writesec <сектор> <блок_памяти>`
+Записывает данные из блока памяти в указанный сектор.
+
+## Управление цветом в выводе
+
+Ядро поддерживает цветной вывод через поток `KernelOut`:
+
 ```cpp
-
-void* ptr = allocate(64);
-memset(ptr, 0, 64);
-
-
-ptr = realloc(ptr, 128);
-
-
-free(ptr);
+kout << RED << "Текст красным" << reset;
+kout << bg(BLUE) << "Текст на синем фоне";
 ```
 
-2. String Manipulation:
-```cpp
-string str = "Hello";
-str += ", world!";
-console.writeLine(str.data());
+Доступные цвета: `BLACK`, `BLUE`, `GREEN`, `CYAN`, `RED`, `MAGENTA`, `BROWN`, `LIGHT_GRAY`, `DARK_GRAY`, `LIGHT_BLUE`, `LIGHT_GREEN`, `LIGHT_CYAN`, `LIGHT_RED`, `LIGHT_MAGENTA`, `YELLOW`, `WHITE`.
+
+## Структура памяти
+
+- **Heap**: 16MB статически выделенной памяти
+- **Видеопамять**: 0xB8000 (текстовый режим 80x25)
+- **Управление памятью**: блочный аллокатор с coalescing
+
+## Особенности разработки
+
+### Обработка исключений
+Ядро включает полную систему обработки исключений процессора с дампом регистров и трассировкой стека.
+
+### Потоковый ввод-вывод
+Реализованы аналоги `iostream`:
+- `KernelIn` для ввода
+- `KernelOut` для вывода
+- Поддержка манипуляторов (`hex`, `dec`, `endl`)
+
+### Управляемые контейнеры
+Шаблонный класс `managed<T>` предоставляет безопасные контейнеры с автоматическим управлением памятью.
+
+## Форматирование диска
+
+Если при загрузке обнаруживается неподдерживаемая файловая система, ядро предлагает отформатировать диск. Процесс форматирования включает:
+1. Создание суперблока
+2. Инициализацию битмапов
+3. Создание корневой директории
+
+## Отладка
+
+Ядро включает встроенные инструменты отладки:
+- Трассировка вызовов функций
+- Дамп стека
+- Просмотр состояния памяти
+- Информация о блоках памяти
+
+## Примеры использования
+
+```bash
+> ram info
+> disk info
+> ram alloc 1024
+> ram get x1000
+> help
 ```
 
-### Troubleshooting
-1. Build Fails with "Missing i686-elf-gcc"
-- Error: "i686-elf-gcc: command not found"
-- Solution: Install the cross-compiler toolchain for your platform
-- Verify installation: `i686-elf-gcc --version`
-
-2. QEMU Launch Fails
-- Error: "Could not load kernel image"
-- Check if os.img was generated successfully
-- Verify QEMU installation: `qemu-system-i386 --version`
-
-3. Memory Allocation Failures
-- Enable debug mode by defining `DEBUG_MEMORY` in memory.cpp
-- Check memory stats using `get_stats()`
-- Verify heap size configuration in memory.cpp
-
-## Data Flow
-XCore follows a traditional kernel architecture where hardware interactions are abstracted through the CPU and memory management layers.
-
-```ascii
-Boot Loader -> Kernel Entry -> Memory Init -> Exception Init -> Console Init
-     |            |              |              |                |
-     v            v              v              v                v
-  [BIOS]    [Protected Mode] [Memory Mgmt] [CPU Exception] [User Interface]
-```
-
-Key component interactions:
-1. Boot loader initializes system and switches to protected mode
-2. Kernel initializes core subsystems (memory, exceptions, console)
-3. Memory manager handles allocation requests through memory blocks
-4. CPU exceptions are handled through the IDT and custom handlers
-5. Console provides I/O interface through memory-mapped display
-6. String operations use managed memory for automatic cleanup
-7. Automated tests verify system integrity during initialization
+Система предназначена для образовательных целей и демонстрации принципов работы операционных систем.

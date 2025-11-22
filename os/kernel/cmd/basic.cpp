@@ -20,16 +20,12 @@
 #define check_flag(flags, n) ((flags) & bit(n))
 
 int reboot(argt) {
-    // Явная переинициализация кучи и систем
-    memory::reset();  // Добавь этот метод в memory.cpp
+    disk::read(REBOOT, 1, (char*)0x7c00);
+    if (*(uint16_t *)(0x7c00+510) != 0xAA55) panic("Reboot bunny is corrupted");
+    *(uint32_t *)0x7DF8 = detect_memory().total()*256;
 
-    // Аппаратная перезагрузка
-    asm volatile (
-            "mov $0x1234, %ax\n"
-            "mov %ax, %ss\n"
-            "mov $0xFFFF, %sp\n"
-            "jmp $0xFFFF,$0x0000"  // Far jump to reset vector
-            );
+    ((void(*)())0x7C00)();
+
 
     return 0;
 }

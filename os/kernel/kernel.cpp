@@ -46,7 +46,7 @@ extern "C" [[noreturn]] void  _start() {
 
     kout.clear();
 
-//    kout << "Total blocks: " << dispatcher::superblock.data << endl;
+
 
     string com1 = "";
     //console.write(a.data());
@@ -59,7 +59,7 @@ extern "C" [[noreturn]] void  _start() {
     //kout << "  ";
     kout << WHITE << "XCore";
     kout << reset << " KERNEL v1.2 / Type 'help' for information " << endl << endl;
-//    kout << dispatcher::superblock;
+
 
     string com = "";
     while (true) {

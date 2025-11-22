@@ -48,7 +48,7 @@ public:
             _data[i] = other._data[i];
         }
 
-        // Добавляем нуль-терминатор если нужно
+
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -85,7 +85,7 @@ public:
             _capacity = other._capacity;
             nullend = other.nullend;
 
-            // Добавляем нуль-терминатор если нужно
+
             if (nullend && _size < _capacity) {
                 _data[_size] = T();
             }
@@ -116,7 +116,7 @@ public:
         _data[index] = value;
         _size++;
 
-        // Обновляем нуль-терминатор если нужно
+
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -130,7 +130,7 @@ public:
         }
         _size--;
 
-        // Обновляем нуль-терминатор если нужно
+
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -177,7 +177,7 @@ public:
             _data[old_size + i] = other._data[i];
         }
 
-        // Обновляем нуль-терминатор если нужно
+
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -229,7 +229,7 @@ public:
             _capacity = new_capacity;
             _data = (T *) realloc(_data, _capacity * sizeof(T));
 
-            // Добавляем нуль-терминатор если нужно
+
             if (nullend && _size < _capacity) {
                 _data[_size] = T();
             }
@@ -242,7 +242,7 @@ public:
         }
         _size = newsize;
 
-        // Добавляем нуль-терминатор если нужно
+
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -253,9 +253,9 @@ public:
             _capacity = _size > 0 ? _size : 1;
             _data = (T *) realloc(_data, _capacity * sizeof(T));
 
-            // Добавляем нуль-терминатор если нужно
+
             if (nullend) {
-                // Для nullend всегда должен быть дополнительный байт для терминатора
+
                 _capacity = _size + 1;
                 _data = (T *) realloc(_data, _capacity * sizeof(T));
                 _data[_size] = T();

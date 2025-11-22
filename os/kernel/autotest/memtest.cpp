@@ -45,11 +45,11 @@ int memtest(TestResult *results) {
     results[test_count++].passed = cmp;
     free(t7);
 
-//    results[test_count].test_name = "memcmp basic function";
-//    auto t9 = allocate(64);
-//    auto t10 = t9;
-//    results[test_count++].passed = !memcmp(t9, t10, 64) && !memcmp(t9, nullptr, 64);
-//    free(t9);
+
+
+
+
+
 
     results[test_count].test_name = "Different sizes work";
     auto t11 = allocate(1);

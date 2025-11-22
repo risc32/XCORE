@@ -7,7 +7,7 @@ struct wstring;
 struct string : public managed<char> {
     string() : managed<char>() {
         nullend = true;
-        // Гарантируем нуль-терминатор
+
         _data[0] = '\0';
     }
 
@@ -18,7 +18,7 @@ struct string : public managed<char> {
                 push_back(*(s++));
             }
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = '\0';
         }
@@ -28,17 +28,17 @@ struct string : public managed<char> {
         nullend = true;
         if (s) {
             while (*s != 0) {
-                // Конвертируем wchar_t в char (простое приведение)
+
                 push_back(static_cast<char>(*(s++)));
             }
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = '\0';
         }
     }
 
-    // Конструктор копирования
+
     string(const string& other) : managed<char>(other) {
         nullend = true;
     }
@@ -72,7 +72,7 @@ struct string : public managed<char> {
         for (int i = 0; i < count; ++i) {
             push_back(elem);
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = '\0';
         }
@@ -88,7 +88,7 @@ struct string : public managed<char> {
     string(char c) : managed<char>() {
         nullend = true;
         push_back(c);
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = '\0';
         }
@@ -100,13 +100,13 @@ struct string : public managed<char> {
         for (size_t i = 0; i < N && array[i] != '\0'; i++) {
             push_back(array[i]);
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = '\0';
         }
     }
 
-    // Метод для получения C-style строки
+
     const char* c_str() const {
         return _data;
     }
@@ -115,7 +115,7 @@ struct string : public managed<char> {
 struct wstring : public managed<wchar_t> {
     wstring() : managed<wchar_t>() {
         nullend = true;
-        // Гарантируем нуль-терминатор
+
         if (_capacity > 0) {
             _data[0] = L'\0';
         }
@@ -128,7 +128,7 @@ struct wstring : public managed<wchar_t> {
                 push_back(*(s++));
             }
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
@@ -138,17 +138,17 @@ struct wstring : public managed<wchar_t> {
         nullend = true;
         if (s) {
             while (*s != '\0') {
-                // Конвертируем char в wchar_t
+
                 push_back(static_cast<wchar_t>(*(s++)));
             }
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
     }
 
-    // Конструктор копирования
+
     wstring(const wstring& other) : managed<wchar_t>(other) {
         nullend = true;
     }
@@ -182,7 +182,7 @@ struct wstring : public managed<wchar_t> {
         for (size_t i = 0; i < s.size(); i++) {
             push_back(static_cast<wchar_t>(s[i]));
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
@@ -193,7 +193,7 @@ struct wstring : public managed<wchar_t> {
         for (int i = 0; i < count; ++i) {
             push_back(elem);
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
@@ -202,7 +202,7 @@ struct wstring : public managed<wchar_t> {
     wstring(wchar_t c) : managed<wchar_t>() {
         nullend = true;
         push_back(c);
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
@@ -214,13 +214,13 @@ struct wstring : public managed<wchar_t> {
         for (size_t i = 0; i < N && array[i] != L'\0'; i++) {
             push_back(array[i]);
         }
-        // Гарантируем нуль-терминатор
+
         if (_size < _capacity) {
             _data[_size] = L'\0';
         }
     }
 
-    // Метод для получения C-style широкой строки
+
     const wchar_t* c_str() const {
         return _data;
     }
@@ -231,8 +231,8 @@ string operator "" _s(const char *s) {
 }
 
 string to_string(int val, int base = 10) {
-    char buf[32]; // Увеличим буфер для безопасности
-    // Предполагается, что itoa существует в вашей системе
+    char buf[32];
+
     return string(itoa(val, buf, base));
 }
 
@@ -246,7 +246,7 @@ int to_int(const string &s, int base = 10) {
 }
 
 int to_int(const wstring &s, int base = 10) {
-    // Конвертируем wstring в string и затем в int
+
     string temp;
     for (size_t i = 0; i < s.size(); i++) {
         temp.push_back(static_cast<char>(s[i]));

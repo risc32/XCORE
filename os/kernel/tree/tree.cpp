@@ -12,7 +12,7 @@ struct path {
         uint64_t* data;
         int index;
 
-        operator bool () { // NOLINT(*-explicit-constructor)
+        operator bool () {
             return get_bit((char*)&data, index);
         }
 
@@ -102,7 +102,7 @@ struct tree {
         if (addr == 0) return 0;
 
         inode node = getinode(addr);
-        if (node.nd.a == 0) return addr; // Нельзя выполнить правый поворот
+        if (node.nd.a == 0) return addr;
 
         inode left_child = getinode(node.nd.a);
 
@@ -110,9 +110,9 @@ struct tree {
         left_child.nd.b = addr;
         node.nd.a = child_right;
 
-        // Обновляем глубины ПЕРЕД записью
-        update_depth(addr);     // Сначала обновляем текущий узел
-        update_depth(left_child.index); // Затем левый дочерний
+
+        update_depth(addr);
+        update_depth(left_child.index);
 
         write(addr, node);
         write(left_child.index, left_child);
@@ -124,7 +124,7 @@ struct tree {
         if (addr == 0) return 0;
 
         inode node = getinode(addr);
-        if (node.nd.b == 0) return addr; // Нельзя выполнить левый поворот
+        if (node.nd.b == 0) return addr;
 
         inode right_child = getinode(node.nd.b);
 
@@ -132,9 +132,9 @@ struct tree {
         right_child.nd.a = addr;
         node.nd.b = child_left;
 
-        // Обновляем глубины ПЕРЕД записью
-        update_depth(addr);        // Сначала обновляем текущий узел
-        update_depth(right_child.index); // Затем правый дочерний
+
+        update_depth(addr);
+        update_depth(right_child.index);
 
         write(addr, node);
         write(right_child.index, right_child);
@@ -197,7 +197,7 @@ struct tree {
 
     static uint64_t add(inode v) {
         uint64_t addr = dispatcher::getfree();
-        // Гарантируем что depth установлен
+
         if (v.nd.depth == 0) {
             v.nd.depth = 1;
         }

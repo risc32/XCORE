@@ -58,3 +58,4 @@
 #define VIDEO_MEMORY 0xB8000
 
 #define SECOND 39
+#define REBOOT 1024

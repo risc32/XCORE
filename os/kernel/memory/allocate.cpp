@@ -11,10 +11,10 @@ void *allocate(size_t size) {
 
     while (block) {
         if (!block->used && block->size >= size) {
-            // Нашли подходящий блок
+
             size_t remaining = block->size - size;
 
-            // Проверяем, можно ли разделить блок
+
             if (remaining >= sizeof(memory_block) + MINB_SIZE) {
                 auto *new_block = (memory_block *)(
                         (char *)block + sizeof(memory_block) + size

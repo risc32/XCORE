@@ -3,6 +3,9 @@
 fasm os/boot.asm build/boot.bin
 if errorlevel 1 exit /b 1
 
+fasm os/kernel/cmd/reboot.asm build/reboot.bin
+if errorlevel 1 exit /b 1
+
 gcc os/kernel/kernel.cpp -o prep.cpp -Wall -E -DPREP -Wchanges-meaning
 gcc os/kernel/kernel.cpp -o prep.asm -Wall -S -DPREP -Wchanges-meaning -fpermissive
 if errorlevel 1 exit /b 1
@@ -25,6 +28,9 @@ dd if=build/boot.bin of=os.img bs=512 count=1 conv=notrunc
 if errorlevel 1 exit /b 1
 
 dd if=build/kernel.bin of=os.img bs=512 seek=39 conv=notrunc
+if errorlevel 1 exit /b 1
+
+dd if=build/reboot.bin of=os.img bs=512 seek=1024 conv=notrunc
 if errorlevel 1 exit /b 1
 
 

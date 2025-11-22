@@ -17,10 +17,10 @@ typedef uint32_t uintptr_t;
 typedef uint32_t size_t;
 typedef int32_t ssize_t;
 
-// namespace std {
-//     using size_t = ::size_t;
-//     using uintptr_t = ::uintptr_t;
-// }
+
+
+
+
 
 typedef uint16_t port_t;
 typedef uint32_t phys_addr_t;

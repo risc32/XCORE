@@ -38,10 +38,10 @@ struct memory {
         first->next = nullptr;
         mbids = 0;
 
-        // Очищаем всю кучу
+
         //memzero(heap, sizeof(heap));
 
-        // Переинициализируем первый блок
+
         first->size = (1024 * 1024 * 16) - sizeof(memory_block);
         first->used = false;
         first->next = nullptr;
@@ -72,3 +72,37 @@ int memory::mbids = 0;
 #include "free.cpp"
 #include "realloc.cpp"
 
+struct MemoryInfoE801 {
+    uint16_t memory_1mb_16mb;
+    uint16_t memory_above_16mb;
+
+    uint32_t total() {
+
+
+        uint32_t total_kb = memory_1mb_16mb;
+
+
+        total_kb += memory_above_16mb * 64;
+
+
+        total_kb += 640;
+
+        return total_kb;
+    }
+};
+
+MemoryInfoE801 detect_memory() {
+    MemoryInfoE801 info = {};
+
+    asm volatile (
+            "mov $0xE801, %%ax\n\t"
+            "int $0x15\n\t"
+            "mov %%ax, %0\n\t"
+            "mov %%bx, %1\n\t"
+            : "=r" (info.memory_1mb_16mb), "=r" (info.memory_above_16mb)
+            :
+            : "ax", "bx", "cx", "dx", "memory"
+            );
+
+    return info;
+}

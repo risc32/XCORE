@@ -4,12 +4,12 @@
 #include "../xcfs/bitmap.cpp"
 
 struct fragment {
-    // 1 - 512 / 1024 = 0.5  ; + fcount
-    // 1 - 256 / 1024 = 0.75 ; - fcount
 
-    // allocate disk space with the possibility of fragmentation
+
+
+
     static managed<indirect> hardwarealloc(size_t size) {
-//        uint64_t scount = (512 + size) / 512;
+
         managed<indirect> res = {};
         uint64_t allc = 0;
         bool sc = true;

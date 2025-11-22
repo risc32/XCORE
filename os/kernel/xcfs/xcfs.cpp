@@ -29,18 +29,18 @@ struct filesystem {
         kout.clear();
         kout << WHITE << "XCore";
         kout << reset << " File System v2.1 XCFS " << (dispatcher::ismain ? "[boot disk]" : "") << endl << endl;
-//        if (!dispatcher::ismain) {
-//            format();
-//            mounted = true;
-//            dispatcher::initsb();
-//            return;
-//        }
 
-//        if(dispatcher::superblock.magic[0] == 0) {
-//            format();
-//            mounted = true;
-//            return;
-//        }
+
+
+
+
+
+
+
+
+
+
+
         dispatcher::initsb();
         if (memcmp(dispatcher::superblock.magic, "XCFS", 4) != 0) {
             kout << "The current file system on this disk is not supported." << endl << RED << "Format disk?" << LIGHT_RED << " This action cannot be undone." << WHITE << " [yes/no]" << endl << CYAN;

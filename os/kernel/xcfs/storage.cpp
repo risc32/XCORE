@@ -84,7 +84,7 @@ union inode {
         memcpy(name, filename.data(), (filename).size());
         //name[sizeof(name) - 1] = '\0';
 
-        created = 0;    // TODO: добавить системное время
+        created = 0;
         modified = 0;
         accessed = 0;
 

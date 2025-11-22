@@ -7,12 +7,12 @@ Progress progress = {total, 30, lbl};code;progress.finish();own.increment();}
 
 
 void filesystem::format() {
-    // 1. Подготовка структур XCFS >
-    // 2. Запись суперблока
-    // 3. Инициализация inode таблиц
-    // 4. Создание bitmap
-    // 5. Создание корневой директории
-    // 6. Финальная проверка
+
+
+
+
+
+
 
     KernelOut kout = {};
     kout << MAGENTA << "   ";

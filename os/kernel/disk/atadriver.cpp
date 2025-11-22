@@ -45,10 +45,10 @@ public:
         geo.lba48_supported = lba48_supported;
 
         if (!lba48_supported) {
-            // LBA28 ограничение ~137GB
+
             geo.total_sectors = (1ULL << 28) - 1;
         } else {
-            // Читаем ATA IDENTIFY для получения реального размера
+
             outb(base_port + 6, 0xA0);
             outb(base_port + 2, 0);
             outb(base_port + 3, 0);
@@ -63,14 +63,14 @@ public:
                 identify[i] = inw(base_port);
             }
 
-            // Получаем общее число LBA секторов из LBA48 полей
+
             geo.total_sectors =
                     (uint64_t)identify[100] |
                     ((uint64_t)identify[101] << 16) |
                     ((uint64_t)identify[102] << 32) |
                     ((uint64_t)identify[103] << 48);
 
-            // Если LBA48 поля пустые, пробуем LBA28
+
             if (geo.total_sectors == 0) {
                 geo.total_sectors =
                         (uint64_t)identify[60] |
@@ -82,14 +82,14 @@ public:
         return geo;
     }
 
-    // Простой детект размера через тестовое чтение
+
     uint64_t detect_size_simple() {
         char test_buffer[512];
 
-        // Пробуем читать последовательно увеличивающиеся сектора
+
         for (uint64_t test_sector = 1000; test_sector < (1ULL << 40); test_sector *= 2) {
             if (!read_sector_test(test_sector, test_buffer)) {
-                return test_sector / 2;  // Последний читаемый сектор
+                return test_sector / 2;
             }
         }
 
@@ -98,7 +98,7 @@ public:
 
 private:
     bool read_sector_test(uint64_t lba, char* buffer) {
-        // Пробуем прочитать сектор без выброса исключений
+
         wait_bsy();
 
         outb(base_port + ATA_SECTOR_COUNT, 1);
@@ -108,18 +108,18 @@ private:
         outb(base_port + ATA_DRIVE_HEAD, 0xE0 | ((lba >> 24) & 0x0F));
         outb(base_port + ATA_COMMAND, 0x20);
 
-        // Ждем готовности с таймаутом
+
         for (int i = 0; i < 1000; i++) {
             uint8_t status = inb(base_port + ATA_STATUS);
-            if (!(status & 0x80)) { // BSY cleared
-                if (status & 0x08) { // DRQ ready
-                    // Читаем данные
+            if (!(status & 0x80)) {
+                if (status & 0x08) {
+
                     for (int j = 0; j < 256; j++) {
                         *((uint16_t*)buffer + j) = inw(base_port + ATA_DATA);
                     }
                     return true;
                 }
-                if (status & 0x01) { // Error
+                if (status & 0x01) {
                     return false;
                 }
             }
@@ -211,7 +211,7 @@ public:
         return true;
     }
 
-    // Геттеры для геометрии
+
     uint64_t get_total_sectors() const { return geometry.total_sectors; }
     uint32_t get_sector_size() const { return geometry.sector_size; }
     uint64_t get_total_bytes() const { return geometry.total_bytes; }

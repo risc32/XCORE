@@ -25,7 +25,7 @@ public:
         fg = console.current_fg_color;
         bg = console.current_bg_color;
 
-        console.cursor_x += width + 12 + lbl.size() + count_digits(total)*2; // Место для прогресс-бара и процентов
+        console.cursor_x += width + 12 + lbl.size() + count_digits(total)*2;
         place();
     }
 
@@ -42,7 +42,7 @@ public:
 
     [[nodiscard]] int get_filled_count() const {
         if (total == 0) return 0;
-        return (float)_current / total * width; // NOLINT(*-narrowing-conversions)
+        return (float)_current / total * width;
     }
 
     [[nodiscard]] int get_empty_count() const {
@@ -50,29 +50,29 @@ public:
     }
 
     void place() const {
-        // Строим прогресс-бар
+
         wstring bar = wstring(get_filled_count(), L'=') + wstring(get_empty_count(), L' ');
 
-        // Добавляем стрелку если не полный
+
         if (_current < total && get_filled_count() < width) {
             if (bar.size() > get_filled_count()) {
                 bar[get_filled_count()] = L'>';
             }
         }
 
-        // Формируем полную строку
+
         wstring full_string;
 
-        // Добавляем метку если есть
+
 
 
         full_string += wstring(L"[") + bar + wstring(L"] ");
 
-        // Добавляем проценты
-        int percent = total > 0 ? (float)_current / total * 100 : 0; // NOLINT(*-narrowing-conversions)
+
+        int percent = total > 0 ? (float)_current / total * 100 : 0;
         full_string += to_wstring(percent) + wstring(L"%");
 
-        // Добавляем числа если есть место
+
         if (width >= 15) {
             full_string += wstring(L" (") + to_wstring(_current) + wstring(L"/") + to_wstring(total) + wstring(L")");
         }
@@ -84,7 +84,7 @@ public:
         uint8_t bbg = console.current_bg_color;
 
         console.set_color((VGAColor)fg, (VGAColor)bg);
-        // Отображаем
+
         console.place(string(full_string.data()).data(), X, Y-(console.scrolled - scroll));
         console.set_color((VGAColor)bfg, (VGAColor)bbg);
     }

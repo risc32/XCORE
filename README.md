@@ -1,3 +1,5 @@
+этот ридми старой версии, к текущей версии он отношения почти не имеет
+
 # XCore: A Minimalist x86 Operating System Kernel with Memory Management
 
 XCore is a lightweight, bare-metal operating system kernel written in C++ that provides essential memory management, CPU exception handling, and console I/O functionality for x86 architecture. It features a custom memory allocator, CPU exception handling, and a basic console interface, making it suitable for educational purposes and embedded systems development.

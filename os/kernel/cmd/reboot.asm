@@ -2,11 +2,11 @@ use32
 org 0x7c00
 
 start:
+    jmp $
 
     ; Сохраняем регистры
     pusha
     push es
-    
     ; Устанавливаем сегмент
     mov ax, 0x0000
     mov es, ax

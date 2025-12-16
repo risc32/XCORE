@@ -19,16 +19,23 @@
 /* Check if bit n in flags is set */
 #define check_flag(flags, n) ((flags) & bit(n))
 
+void rbunny(int total) {
+    waitChar(' ');
+    for (int i = 0; i < total; ++i) {
+        *(uint64_t*)(0x7c00+i+total) = 0;
+    }
+
+}
 int reboot(argt) {
-    disk::read(REBOOT, 1, (char*)0x7c00);
-    if (*(uint16_t *)(0x7c00+510) != 0xAA55) panic("Reboot bunny is corrupted");
-    *(uint32_t *)0x7DF8 = detect_memory().total()*256;
-
-    ((void(*)())0x7C00)();
-
-
+    memcpy((void*)0x7c00, (void*)&rbunny, 512);
+    ((void(*)(int))0x7C00)(detect_memory().total()*32);
     return 0;
 }
+//rbunny(detect_memory().total()*32);
+
+
+
+//
 
 int shutdown(argt) {
     auto *acpi_addr = (uint16_t *) 0x40E;

@@ -39,9 +39,13 @@ void autotest() {  ///for stacktrace
     TestResult resbuf[20] = {};
 
     console.writeLine("MEMORY TEST");
+    s0::put("DIA.00 KERNEL 0x20000 .text\n");
 
     check(resbuf, cbuf, console, memtest(resbuf));
+    s0::put("DIA.Vmem KERNEL 0x20000 .text\n");
+
     check(resbuf, cbuf, console, mngtest(resbuf));
+    s0::put("DIA.Vmng KERNEL 0x20000 .text\n");
 
 
 }

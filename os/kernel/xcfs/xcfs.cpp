@@ -5,6 +5,7 @@
 #include "../stream/stream.cpp"
 #include "bitmap.cpp"
 #include "../tree/tree.cpp"
+#include "../utils/inited.cpp"
 
 struct filesystem {
     static bool mounted;
@@ -12,16 +13,20 @@ struct filesystem {
     static tree bst;
 
     static void init() {
+        s0::put("void filesystem::init() KERNEL 0x20000 .text\n");
+
         bst.sector = superblock.root;
         mounted = false;
         bst = {};
     }
 
     static void mount() {
+        s0::put("void filesystem::mount() KERNEL 0x20000 .text\n");
+
         KernelOut kout;
         KernelIn kin;
 
-        string ans = "!yes";
+        string ans = "";
         dispatcher::init();
 
 
@@ -29,17 +34,10 @@ struct filesystem {
         kout.clear();
         kout << WHITE << "XCore";
         kout << reset << " File System v2.1 XCFS " << (dispatcher::ismain ? "[boot disk]" : "") << endl << endl;
-
-
-
-
-
-
-
-
-
-
-
+#define ydiskans
+#ifdef ydiskans
+        ans = "yes";
+#endif
 
         dispatcher::initsb();
         if (memcmp(dispatcher::superblock.magic, "XCFS", 4) != 0) {
@@ -57,9 +55,19 @@ struct filesystem {
         }
         kout << CYAN << "Press space to enter the kernel" << endl;
         mounted = true;
+#ifndef ydiskans
         waitChar(' ');
+#endif
     }
 
+    static inode create_file(string name) {
+        auto spl = split(name, '/');
+        if (bst.search(spl[spl.size()-2]).type != it_file) panic("There cannot be other elements in the file");
+        inode ind(spl[spl.size()-1], it_file, 644, bst.lastaddr);
+        memcpy(ind.fragments, fragment::hardwarealloc(1).data(), sizeof ind.fragments);\
+        bst.insert(ind);
+        return ind;
+    }
 
     static void format();
 };

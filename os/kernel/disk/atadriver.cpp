@@ -2,6 +2,7 @@
 
 #include "../types/types.cpp"
 #include "../cpu/cpu.cpp"
+#include "../memory/memory.cpp"
 
 struct DiskGeometry {
     uint64_t total_sectors;
@@ -14,29 +15,49 @@ class ATADriver {
 public:
     ATADriver(uint16_t port = 0x1F0) : base_port(port) {
         detect_capabilities();
+#ifndef stage2
         geometry = detect_geometry();
+#endif
     }
 
-    void detect_capabilities() {
-        outb(base_port + 6, 0xA0);
-        outb(base_port + 2, 0);
-        outb(base_port + 3, 0);
-        outb(base_port + 4, 0);
-        outb(base_port + 5, 0);
-        outb(base_port + 7, 0xEC);
+    bool detect_capabilities() {
 
-        if (inb(base_port + 7) == 0) {
+        outb(base_port + ATA_DRIVE_HEAD, 0xA0);
+        outb(base_port + ATA_SECTOR_COUNT, 0);
+        outb(base_port + ATA_LBA_LOW, 0);
+        outb(base_port + ATA_LBA_MID, 0);
+        outb(base_port + ATA_LBA_HIGH, 0);
+        outb(base_port + ATA_COMMAND, 0xEC);
+
+
+        for (int i = 0; i < 1000; i++) {
+            asm volatile ("pause");
+        }
+
+        uint8_t status = inb(base_port + ATA_STATUS);
+        if (status == 0) {
             lba48_supported = false;
-            return;
+            return false;
         }
 
         wait_bsy();
 
+
+        if (inb(base_port + ATA_LBA_MID) != 0 || inb(base_port + ATA_LBA_HIGH) != 0) {
+            lba48_supported = false;
+            return false;
+        }
+
+        wait_drq();
+
+
         uint16_t identify[256];
         for (int i = 0; i < 256; i++) {
-            identify[i] = inw(base_port);
+            identify[i] = inw(base_port + ATA_DATA);
         }
-        lba48_supported = identify[83] & (1 << 10);
+
+        lba48_supported = (identify[83] & (1 << 10)) != 0;
+        return true;
     }
 
     DiskGeometry detect_geometry() {
@@ -49,18 +70,19 @@ public:
             geo.total_sectors = (1ULL << 28) - 1;
         } else {
 
-            outb(base_port + 6, 0xA0);
-            outb(base_port + 2, 0);
-            outb(base_port + 3, 0);
-            outb(base_port + 4, 0);
-            outb(base_port + 5, 0);
-            outb(base_port + 7, 0xEC);
+            outb(base_port + ATA_DRIVE_HEAD, 0xA0);
+            outb(base_port + ATA_SECTOR_COUNT, 0);
+            outb(base_port + ATA_LBA_LOW, 0);
+            outb(base_port + ATA_LBA_MID, 0);
+            outb(base_port + ATA_LBA_HIGH, 0);
+            outb(base_port + ATA_COMMAND, 0xEC);
 
             wait_bsy();
+            wait_drq();
 
             uint16_t identify[256];
             for (int i = 0; i < 256; i++) {
-                identify[i] = inw(base_port);
+                identify[i] = inw(base_port + ATA_DATA);
             }
 
 
@@ -70,8 +92,8 @@ public:
                     ((uint64_t)identify[102] << 32) |
                     ((uint64_t)identify[103] << 48);
 
-
             if (geo.total_sectors == 0) {
+
                 geo.total_sectors =
                         (uint64_t)identify[60] |
                         ((uint64_t)identify[61] << 16);
@@ -153,12 +175,14 @@ public:
         while (!(inb(base_port + ATA_STATUS) & 0x08)) {}
     }
 
+#ifndef stage2
     managed<char> read(uint64_t lba, uint32_t count) {
         managed<char> b;
         b.setsize(count * 512);
         read(lba, count, b.data());
         return b;
     }
+#endif
 
     void read(uint64_t lba, uint32_t count, char* buffer) const {
         wait_bsy();
@@ -210,10 +234,4 @@ public:
 
         return true;
     }
-
-
-    uint64_t get_total_sectors() const { return geometry.total_sectors; }
-    uint32_t get_sector_size() const { return geometry.sector_size; }
-    uint64_t get_total_bytes() const { return geometry.total_bytes; }
-    bool is_lba48_supported() const { return geometry.lba48_supported; }
 };

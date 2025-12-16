@@ -57,5 +57,12 @@
 #define KERNEL_BASE 0x100000
 #define VIDEO_MEMORY 0xB8000
 
-#define SECOND 39
+#define KERNEL 39
 #define REBOOT 1024
+#define ISBADDR 0x7B00
+
+#define FRBADDR 0x7bd8
+#define WIDADDR 0x7be0
+#define HEIADDR 0x7be8
+#define PITADDR 0x7bf0
+#define MDIADDR 0x7b00

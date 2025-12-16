@@ -1,11 +1,47 @@
 #pragma once
 
-#define HEAP_SIZE (1024 * 1024 * 16)
+#include "../types/scalar.cpp"
+#include "../debug/debug.cpp"
+
+struct MemoryInfoE801 {
+    uint16_t memory_1mb_16mb;
+    uint16_t memory_above_16mb;
+
+    uint32_t total() {
+
+
+        uint32_t total_kb = memory_1mb_16mb;
+
+
+        total_kb += memory_above_16mb * 64;
+
+
+        total_kb += 640;
+
+        return total_kb;
+    }
+};
+MemoryInfoE801 detect_memory() {
+    MemoryInfoE801 info = {};
+
+    asm volatile (
+            "mov $0xE801, %%ax\n\t"
+            "int $0x15\n\t"
+            "mov %%ax, %0\n\t"
+            "mov %%bx, %1\n\t"
+            : "=r" (info.memory_1mb_16mb), "=r" (info.memory_above_16mb)
+            :
+            : "ax", "bx", "cx", "dx", "memory"
+            );
+
+    return info;
+}
+
+#define HEAP_SIZE (80*1024*1024)
 #define MAXB_SIZE 512
 #define MINB_SIZE 32
 #define ALIGN 32
 
-#include "../types/scalar.cpp"
 
 void memzero(void *, size_t);
 
@@ -25,10 +61,13 @@ struct memory {
     static int mbids;
 
     static void init() {  ///for stacktrace
+
         first = (memory_block*)heap;
         first->size = HEAP_SIZE - sizeof(memory_block);
         first->used = false;
         first->next = nullptr;
+
+        s0::put("void memory::init() KERNEL 0x20000 .text\n");
     }
 
     static void reset() {
@@ -68,41 +107,9 @@ int memory::mbids = 0;
 #include "basic/memcpy.cpp"
 #include "basic/memmove.cpp"
 #include "basic/memset.cpp"
+
+#ifndef stage2
 #include "allocate.cpp"
 #include "free.cpp"
 #include "realloc.cpp"
-
-struct MemoryInfoE801 {
-    uint16_t memory_1mb_16mb;
-    uint16_t memory_above_16mb;
-
-    uint32_t total() {
-
-
-        uint32_t total_kb = memory_1mb_16mb;
-
-
-        total_kb += memory_above_16mb * 64;
-
-
-        total_kb += 640;
-
-        return total_kb;
-    }
-};
-
-MemoryInfoE801 detect_memory() {
-    MemoryInfoE801 info = {};
-
-    asm volatile (
-            "mov $0xE801, %%ax\n\t"
-            "int $0x15\n\t"
-            "mov %%ax, %0\n\t"
-            "mov %%bx, %1\n\t"
-            : "=r" (info.memory_1mb_16mb), "=r" (info.memory_above_16mb)
-            :
-            : "ax", "bx", "cx", "dx", "memory"
-            );
-
-    return info;
-}
+#endif

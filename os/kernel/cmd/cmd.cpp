@@ -61,6 +61,7 @@ void oneblockinfo(memory_block*  block) {
 #include "basic.cpp"
 #include "ram.cpp"
 #include "disk.cpp"
+#include "cmdsr.cpp"
 
 struct pcommand {
     string name;
@@ -94,6 +95,7 @@ struct cmd {
     static managed<command> commands;
 
     static void init() {  ///for stacktrace
+        s0::put("void cmd::init() KERNEL 0x20000 .text\n");
 
         commands = managed<command>();
         add_command("reboot", reboot);
@@ -101,6 +103,7 @@ struct cmd {
         add_command("help", help);
         add_command("ram", ram);
         add_command("disk", disk);
+        add_command("serial0", cmdsr);
     }
 
     static void add_command(const string& name, int (*func)(argt)) {
@@ -129,7 +132,7 @@ struct cmd {
         }
 
         kout << "Command not found: " << pcom.name << endl;
-        kout << "Type 'help' for available commands";
+        kout << "Type 'help' for available commands" << endl;
     }
 
 private:

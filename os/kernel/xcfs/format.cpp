@@ -7,23 +7,15 @@ Progress progress = {total, 30, lbl};code;progress.finish();own.increment();}
 
 
 void filesystem::format() {
-
-
-
-
-
-
-
     KernelOut kout = {};
     kout << MAGENTA << "   ";
     Progress own(6, 30, "Formatting");
-    super_block sb{};
     PROC(1, "Preparation of structures", {
-        sb = dispatcher::crblock();
+        dispatcher::superblock = dispatcher::crblock();
     });
     kout << YELLOW;
     PROC(1, "Superblock making", {
-        disk::write(dispatcher::ismain, sb.data);
+        disk::write(1, dispatcher::superblock.data);
     });
 
     PROC((int)dispatcher::superblock.bsize, "Bitmap making", {
@@ -32,7 +24,7 @@ void filesystem::format() {
             disk::write(2, b.data);
             progress.increment();
         }
-        disk::write(dispatcher::ismain, sb.data);
+        disk::write(1, dispatcher::superblock.data);
     });
 
     dispatcher::initsb();

@@ -16,7 +16,10 @@ struct disk {
     static ATADriver driver;
 
     static void init() {
+
         driver = {};
+        s0::put("void disk::init() KERNEL 0x20000 .text\n");
+
     }
 
     static void read(uint64_t lba, uint32_t count, char *buffer) {

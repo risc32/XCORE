@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../types/scalar.cpp"
+#include "../types/types.cpp"
+
 
 size_t strlen(const char *str) {
     if (!str) {
@@ -25,3 +26,4 @@ int count_digits(int num, int base = 10) {
     }
     return count;
 }
+

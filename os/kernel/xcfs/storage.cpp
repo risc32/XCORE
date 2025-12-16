@@ -1,6 +1,8 @@
 #pragma once
-
+//#define stage2
 #include "../types/types.cpp"
+
+#ifndef stage2
 #include "../cpu/cpu.cpp"
 #include "../disk/disk.cpp"
 
@@ -17,12 +19,15 @@ struct node {
 
     int size;
 };
+#endif
 
 union super_block {
     char data[512];
     struct {
         char magic[5];
         uint64_t version;
+
+        uint64_t kerneladdr;
 
         uint64_t block_size;
         uint64_t total_blocks;
@@ -36,6 +41,8 @@ union super_block {
         uint64_t last_write;
     };
 };
+
+#ifndef stage2
 
 struct indirect {
     uint64_t blocks;
@@ -116,3 +123,4 @@ struct bitmap {
     char data[512];
 };
 
+#endif

@@ -6,25 +6,36 @@ if errorlevel 1 exit /b 1
 fasm os/kernel/cmd/reboot.asm build/reboot.bin
 if errorlevel 1 exit /b 1
 
-gcc os/kernel/kernel.cpp -o prep.cpp -Wall -E -DPREP -Wchanges-meaning
-gcc os/kernel/kernel.cpp -o prep.asm -Wall -S -DPREP -Wchanges-meaning -fpermissive
+gcc os/kernel/kernel.cpp -w -o prep.cpp -E -DPREP -fpermissive
+gcc os/kernel/kernel.cpp -w -o prep.asm -S -DPREP -fpermissive
 if errorlevel 1 exit /b 1
 
-i686-elf-g++ -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -Wall -fno-use-cxa-atexit -Wchanges-meaning -O0
-
-rem -finstrument-functions
-rem -finstrument-functions -finstrument-functions-exclude-file-list=os/kernel/cpu/trace.cpp
+gcc os/kernel/kernel.cpp -w -D stage2 -o midprep.cpp -E -DPREP -fpermissive
+gcc os/kernel/kernel.cpp -w -D stage2 -o midprep.asm -S -DPREP -fpermissive
 if errorlevel 1 exit /b 1
 
-i686-elf-ld -o build/kernel.bin -Ttext 0x10000 --oformat binary build/kernel.o -O0
+REM 64-bit компиляция
+x86_64-elf-g++ -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive -fno-use-cxa-atexit -O0 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie
+if errorlevel 1 exit /b 1
+
+x86_64-elf-g++ -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/middle.o -fpermissive -fno-use-cxa-atexit -O0 -D stage2 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie
+if errorlevel 1 exit /b 1
+
+x86_64-elf-ld -w -m elf_x86_64 -Ttext 0x20000 -o build/kernel.bin --oformat binary build/kernel.o
+if errorlevel 1 exit /b 1
+
+x86_64-elf-ld -w -m elf_x86_64 -Ttext 0x15000 -o build/middle.bin --oformat binary build/middle.o
 if errorlevel 1 exit /b 1
 
 del os.img
 
-dd if=/dev/zero of=os.img bs=512 count=2048
+dd if=/dev/zero of=os.img bs=512 count=8192
 if errorlevel 1 exit /b 1
 
 dd if=build/boot.bin of=os.img bs=512 count=1 conv=notrunc
+if errorlevel 1 exit /b 1
+
+dd if=build/middle.bin of=os.img bs=512 seek=4 conv=notrunc
 if errorlevel 1 exit /b 1
 
 dd if=build/kernel.bin of=os.img bs=512 seek=39 conv=notrunc
@@ -33,5 +44,4 @@ if errorlevel 1 exit /b 1
 dd if=build/reboot.bin of=os.img bs=512 seek=1024 conv=notrunc
 if errorlevel 1 exit /b 1
 
-
-qemu-system-x86_64 -drive format=raw,file=os.img -monitor stdio
+cmd /k run.bat

@@ -25,27 +25,16 @@ void memset(void *dest, int value, size_t count) {
     }
 
     while (count > 0) {
+
         *ptr++ = byte_value;
         count--;
-    }
 
+    }
 }
 
 void memzero(void *dest, size_t count) {
-    if (count >= 64) {
 
-        asm volatile (
-                "cld\n\t"
-                "mov %0, %%edi\n\t"
-                "mov %1, %%ecx\n\t"
-                "xor %%eax, %%eax\n\t"
-                "rep stosb\n\t"
-                :
-                : "r" (dest), "r" (count)
-                : "eax", "ecx", "edi", "memory"
-                );
-    } else {
-
-        memset(dest, 0, count);
+    for (size_t i = 0; i < count; i++) {
+        ((char*)dest)[i] = 0x00000000;
     }
 }

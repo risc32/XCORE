@@ -52,3 +52,13 @@ void *calloc(size_t num, size_t size) {
 
     return ptr;
 }
+
+void *malloc(size_t size) {
+    void *ptr = allocate(size);
+
+    if (ptr) {
+        memzero(ptr, size);
+    }
+
+    return ptr;
+}

@@ -224,7 +224,7 @@ struct tree {
         sector = add(root);
         lastaddr = sector;
         dispatcher::superblock.root = lastaddr;
-        disk::write(dispatcher::ismain, dispatcher::superblock.data);
+        disk::write(1, dispatcher::superblock.data);
 
         KernelOut() << endl << "Root address: " << lastaddr << endl;
 

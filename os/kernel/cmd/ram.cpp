@@ -113,14 +113,18 @@ int ram(const managed<string>& args) {
                 addr += 64;
             } else if (c == 'w') {
                 addr -= 64;
+            } else if (c == 'S') {
+                addr += 1024;
+            } else if (c == 'W') {
+                addr -= 1024;
             }
             kout.clear();
-            kout << "address: " << hex << (int)addr << endl;
-            for (char* i = addr; i < addr+512; ++i) {
+            kout << "Press SPACE to exit\nKey [lower W] - Change the address by 64\nKey [lower S] - Change the address by -64\nKey [upper W] - Change the address by 1024\nKey [upper S] - Change the address by -1024" << endl;
+            for (char* i = addr; i < addr+1024; ++i) {
                 if ((i - addr) % 64 == 0) {
-                    kout << " | ";
+                    kout << ' ' << swidth(to_wstring((int)i, 16), 6) << " > ";
                 }
-                kout << *i;
+                kout << (*i != '\n' ? *i : ' ');
                 if ((i - addr) % 64 == 63) {
                     kout << endl;
                 }

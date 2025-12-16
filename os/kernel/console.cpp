@@ -530,6 +530,7 @@ bool Console::alt_pressed = false;
 unsigned char Console::last_scancode = 0;
 bool Console::key_processed = true;
 
+#ifndef stage2
 #include "managed/managed.cpp"
 
 string Console::readLine()  {  ///for stacktrace
@@ -632,3 +633,5 @@ string Console::prompt(string message) {
     Console::write(message.data());
     return readLine();
 }
+
+#endif

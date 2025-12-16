@@ -20,7 +20,7 @@ struct dispatcher {
     }
 
     static void initsb() {
-        disk::read(ismain, 1, superblock.data);
+        disk::read(1, 1, superblock.data);
     }
 
     static void initbitmap() {
@@ -28,11 +28,11 @@ struct dispatcher {
         for (int i = 0; i < superblock.bsize; i++) {
             disk::write(superblock.bitmap + i, bp);
         }
-        for (int i = 0; i < superblock.bsize + ismain + 1; i++) {
+        for (int i = 0; i < superblock.bsize + 2; i++) {
             set(i, true);
         }
         for (int i = 0; i < 256; i++) {
-            set(i + SECOND, true);
+            set(i + KERNEL, true);
         }
         setcache(superblock.bitmap);
     }
@@ -148,9 +148,10 @@ struct dispatcher {
         return {
                 .magic = "XCFS",
                 .version = VERSION,
+                .kerneladdr = 39,
                 .block_size = BLOCK_SIZE,
                 .total_blocks = disk::driver.geometry.total_sectors,
-                .bitmap = (uint64_t)ismain + 1,
+                .bitmap = 2,
                 .bsize = bms,
         };
     }

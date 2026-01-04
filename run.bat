@@ -1,1 +1,1 @@
-qemu-system-x86_64 -drive format=raw,file=os.img -vga std -display gtk,show-tabs=on -d int,cpu_reset
+qemu-system-x86_64 -drive format=raw,file=os.img -vga std -display gtk,show-tabs=on -monitor stdio -m 8G -d int,cpu_reset

@@ -226,19 +226,52 @@ struct wstring : public managed<wchar_t> {
     }
 };
 
-string operator "" _s(const char *s) {
+string operator ""_s(const char *s) {
     return string(s);
+}
+
+string to_string(long long val, int base = 10) {
+    char buf[32];
+
+    return string(ltoa(val, buf, base));
+}
+
+wstring to_wstring(long long val, int base = 10) {
+    char buf[32];
+    return wstring(ltoa(val, buf, base));
+}
+
+string to_string(unsigned long long val, int base = 10) {
+    char buf[32];
+
+    return string(ultoa(val, buf, base));
+}
+
+wstring to_wstring(unsigned long long val, int base = 10) {
+    char buf[32];
+    return wstring(ultoa(val, buf, base));
 }
 
 string to_string(int val, int base = 10) {
     char buf[32];
 
-    return string(itoa(val, buf, base));
+    return string(ltoa(val, buf, base));
 }
 
 wstring to_wstring(int val, int base = 10) {
     char buf[32];
-    return wstring(itoa(val, buf, base));
+    return wstring(ltoa(val, buf, base));
+}
+
+string to_string(unsigned int val, int base = 10) {
+    char buf[32];
+
+    return string(ultoa(val, buf, base));
+}
+
+wstring to_wstring(unsigned int val, int base = 10) {
+    char buf[32];
+    return wstring(ultoa(val, buf, base));
 }
 
 int to_int(const string &s, int base = 10) {
@@ -246,6 +279,19 @@ int to_int(const string &s, int base = 10) {
 }
 
 int to_int(const wstring &s, int base = 10) {
+
+    string temp;
+    for (size_t i = 0; i < s.size(); i++) {
+        temp.push_back(static_cast<char>(s[i]));
+    }
+    return atoi(temp.c_str(), base);
+}
+
+int to_int64(const string &s, int base = 10) {
+    return atoi(s.c_str(), base);
+}
+
+int to_int64(const wstring &s, int base = 10) {
 
     string temp;
     for (size_t i = 0; i < s.size(); i++) {

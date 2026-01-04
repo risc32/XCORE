@@ -3,86 +3,126 @@
 #include "../types/types.cpp"
 #include "gfxtypes.cpp"
 #include "../memory/memory.cpp"
-#include "../debug/debug.cpp"
+#include "../debug/inited.cpp"
+#include "crtc.cpp"
 
 struct Screen {
-    static GraphicsInfo info;
-    static GraphicsInfo buffer;
+    static volatile GraphicsInfo info;
+    static volatile GraphicsInfo buffer;
+
+
     static size_t size;
+    static bool double_buffered;
 
-    static void init_graphics() {
-        //memzero((void *) info.framebuffer, size);
-        //memzero((void *) buffer.framebuffer, size);
+    static void init(const GraphicsInfo& inf) {
+        //info = inf;
+        //buffer = inf;
+        size = inf.height * inf.pitch;
 
+
+        if (inf.framebuffer != (uint64_t*)0xb8000) {
+            buffer.framebuffer = (uint64_t*)malloc(size);
+            if (!buffer.framebuffer) {
+                panic("Failed to allocate back buffer");
+            }
+            double_buffered = true;
+        } else {
+            buffer.framebuffer = inf.framebuffer;
+            double_buffered = false;
+        }
+
+
+        clear(0x00000000);
     }
 
     static bool isConsole() {
-        return info.framebuffer == (uint32_t*)0xb8000;
+        return info.framebuffer == nullptr;
     }
 
-    static void iput_pixel(uint32_t x, uint32_t y, uint32_t color, GraphicsInfo& target_info) {
-        if (!target_info.framebuffer || x >= target_info.width || y >= target_info.height)
-            return;
-
-        uint32_t pixels_per_line = target_info.pitch / 4;
-        uint32_t offset = y * pixels_per_line + x;
-        target_info.framebuffer[offset] = color;
+    static void iput_pixel24(uint32_t x, uint32_t y, _co_uint24_t color, volatile GraphicsInfo& target_info) {
+        target_info.fb24[y * (target_info.pitch / 3) + x] = color;
     }
 
-    static void iclear(GraphicsInfo& target_info, uint32_t color) {
+    static void iput_pixel32(uint32_t x, uint32_t y, uint32_t color, volatile GraphicsInfo& target_info) {
+        target_info.fb32[y * (target_info.pitch / 4) + x] = color;
+    }
+
+    static void iclear(volatile GraphicsInfo& target_info, uint32_t color) {
         if (!target_info.framebuffer || target_info.pitch == 0)
             panic("Framebuffer invalid");
 
-        volatile uint32_t* fb = target_info.framebuffer;
-        size_t total_pixels = (target_info.height * target_info.pitch) / 1;
+        uint32_t* fb32 = (uint32_t*)target_info.framebuffer;
+        size_t total_pixels = size;
+
 
         for (size_t i = 0; i < total_pixels; i++) {
-            fb[i] = color;
+            fb32[i] = color;
         }
     }
 
     static void draw(uint32_t x, uint32_t y, uint32_t color) {
-        iput_pixel(x, y, color, buffer);
+        if (info.bpp == 24) iput_pixel24(x, y, uint24(color), buffer);
+        else if (info.bpp == 32) iput_pixel32(x, y, color, buffer);
+    }
+
+    static void draw24(uint32_t x, uint32_t y, _co_uint24_t color) {
+        iput_pixel24(x, y, color, buffer);
+    }
+
+    static void draw32(uint32_t x, uint32_t y, uint32_t color) {
+        iput_pixel32(x, y, color, buffer);
     }
 
     static void draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
         if (x >= info.width || y >= info.height) return;
 
-        uint32_t end_x = min(x + w, info.width);
-        uint32_t end_y = min(y + h, info.height);
-
-        for (uint32_t line = y; line < end_y; line++) {
-            for (uint32_t col = x; col < end_x; col++) {
-                draw(col, line, color);
+        const uint32_t end_x = min(x + w, info.width);
+        const uint32_t end_y = min(y + h, info.height);
+        const _co_uint24_t color24 = uint24(color);
+        if (info.bpp == 24)
+            for (uint32_t line = y; line < end_y; line++) {
+                for (uint32_t col = x; col < end_x; col++) {
+                    draw24(col, line, color24);
+                }
             }
-        }
+        else if (info.bpp == 32)
+            for (uint32_t line = y; line < end_y; line++) {
+                for (uint32_t col = x; col < end_x; col++) {
+                    draw32(col, line, color);
+                }
+            }
     }
 
-    static void clear(uint32_t color = 0) {
+    static void clear(uint32_t color = 0x00000000) {
         iclear(buffer, color);
     }
 
     static void frame() {
-        if (info.framebuffer == buffer.framebuffer || !info.framebuffer || !buffer.framebuffer)
-            return;
 
-        uint32_t lines_to_copy = min(info.height, buffer.height);
-        uint32_t pixels_per_line = min(info.pitch, buffer.pitch) / 4;
+        memcpy((void*)info.framebuffer, (void*)buffer.framebuffer, size);
+    }
 
-        for (uint32_t line = 0; line < lines_to_copy; line++) {
-            volatile uint32_t* src = &buffer.framebuffer[line * (buffer.pitch / 4)];
-            volatile uint32_t* dst = &info.framebuffer[line * (info.pitch / 4)];
+    static void swap_buffers() {
+        if (double_buffered) {
+            frame();
+        }
+    }
 
-            for (uint32_t i = 0; i < pixels_per_line; i++) {
-                dst[i] = src[i];
-            }
+private:
+    static inline void memcpy64(void* dst, const void* src, size_t qword_count) {
+        uint64_t* d = (uint64_t*)dst;
+        const uint64_t* s = (const uint64_t*)src;
+
+        for (size_t i = 0; i < qword_count; i++) {
+            d[i] = s[i];
         }
     }
 };
 
 #include "vesa.cpp"
+//#include "vga.cpp"
 
-
-GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
-GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};
+volatile GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
+volatile GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};
 size_t Screen::size = 0;
+bool Screen::double_buffered = false;

@@ -26,6 +26,12 @@ struct exception {
 #define panic(x) _panic(TRACE, x)
 
 [[noreturn]] void _panic(const char* func, const char *message) {
+    s0::put("void _panic()\n\r");
+    s0::put(func);
+    s0::put(": ");
+    s0::put(message);
+    s0::put("\n\r");
+
     Console& console = _kcons::console;
     console.set_color(RED, BLACK);
     console.writeLine("\n\n");

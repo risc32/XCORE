@@ -5,6 +5,7 @@
 //#include "initlist.cpp"
 
 #define CAPACITY 32
+void free(void* ptr);
 
 template<typename T>
 T move(T&& obj) {
@@ -65,7 +66,7 @@ public:
         for (int i = 0; i < _size; ++i) {
             _data[i].~T();
         }
-        free(_data);
+        (::free)(_data);
     }
 
     managed<T>& operator=(const managed<T>& other) {
@@ -303,6 +304,10 @@ public:
 
     const T* end() const {
         return _data + _size;
+    }
+
+    T& back() {
+        return _data[_size - 1];
     }
 };
 

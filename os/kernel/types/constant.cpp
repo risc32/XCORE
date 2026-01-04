@@ -58,6 +58,10 @@
 #define VIDEO_MEMORY 0xB8000
 
 #define KERNEL 39
+#define KERNELADDR 0x200000
+#define STRKDRR STR(0x200000)
+#define STR(s) #s
+
 #define REBOOT 1024
 #define ISBADDR 0x7B00
 

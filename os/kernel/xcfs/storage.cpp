@@ -50,6 +50,7 @@ struct indirect {
 };
 
 enum inode_type {
+    it_none,
     it_file,
     it_dir,
     it_symbol
@@ -64,7 +65,7 @@ union inode {
         indirect fragments[20];
 
         inode_type type;
-        uint64_t permissions;
+        uint16_t permissions;
 
         uint64_t created;
         uint64_t modified;

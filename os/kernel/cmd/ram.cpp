@@ -107,7 +107,7 @@ int ram(const managed<string>& args) {
     } else if (com == "browse") {
         CHECK(2)
         char c = 0;
-        char* addr = (char*)to_int(args[1], 16);
+        char* addr = (char*)to_int64(args[1], 16);
         do {
             if (c == 's') {
                 addr += 64;

@@ -4,14 +4,84 @@
 #include "graphics.cpp"
 #include "../debug/inited.cpp"
 
-struct VBEInfoBlock {
-    char VESASignature[4];
-    uint16_t VESAVersion;
-    uint32_t OEMStringPtr;
-    uint32_t Capabilities;
-    uint32_t VideoModePtr;
-    uint16_t TotalMemory;
-    uint8_t Reserved[236];
+
+struct VBEInfo {
+
+    uint16_t modeAttributes;
+    uint8_t winAAttributes;
+    uint8_t winBAttributes;
+    uint16_t winGranularity;
+    uint16_t winSize;
+    uint16_t winASegment;
+    uint16_t winBSegment;
+    uint32_t winFuncPtr;
+    uint16_t bytesPerScanLine;
+
+
+    uint16_t xResolution;
+    uint16_t yResolution;
+    uint8_t xCharSize;
+    uint8_t yCharSize;
+    uint8_t numberOfPlanes;
+    uint8_t bitsPerPixel;
+    uint8_t numberOfBanks;
+    uint8_t memoryModel;
+    uint8_t bankSize;
+    uint8_t numberOfImagePages;
+    uint8_t reserved1;
+
+
+    uint8_t redMaskSize;
+    uint8_t redFieldPosition;
+    uint8_t greenMaskSize;
+    uint8_t greenFieldPosition;
+    uint8_t blueMaskSize;
+    uint8_t blueFieldPosition;
+    uint8_t rsvdMaskSize;
+    uint8_t rsvdFieldPosition;
+    uint8_t directColorModeInfo;
+
+
+    uint32_t physBasePtr;
+    uint32_t offScreenMemOffset;
+    uint16_t offScreenMemSize;
+
+
+    uint16_t linBytesPerScanLine;
+    uint8_t bnkNumberOfImagePages;
+    uint8_t linNumberOfImagePages;
+    uint8_t linRedMaskSize;
+    uint8_t linRedFieldPosition;
+    uint8_t linGreenMaskSize;
+    uint8_t linGreenFieldPosition;
+    uint8_t linBlueMaskSize;
+    uint8_t linBlueFieldPosition;
+    uint8_t linRsvdMaskSize;
+    uint8_t linRsvdFieldPosition;
+    uint32_t maxPixelClock;
+
+    uint8_t reserved2[194];
+
+
+    bool hasLinearBuffer() const {
+        return (modeAttributes & 0x80) != 0;
+    }
+
+    bool isGraphicsMode() const {
+        return (modeAttributes & 0x01) != 0;
+    }
+
+    bool isTextMode() const {
+        return !isGraphicsMode();
+    }
+
+
+    uint16_t getPitch() const {
+        if (hasLinearBuffer()) {
+            return linBytesPerScanLine ? linBytesPerScanLine : bytesPerScanLine;
+        }
+        return bytesPerScanLine;
+    }
 } __attribute__((packed));
 
 struct ModeInfoBlock {
@@ -61,47 +131,40 @@ void _mmzr_s0(void* dest, int size) {
 }
 
 struct VESADriver {
+    static VBEInfo fullinfo;
+
     static bool init() {
         s0::put("void VESADriver::init() KERNEL 0x20000 .text\n");
 
-        GraphicsInfo *gfx = (GraphicsInfo *) 0x7000;
+        VBEInfo* vbe = (VBEInfo*)0x8400;
+        serial0() << "LPITCH: " << vbe->getPitch() << endl;
 
+        Screen::info.width = vbe->xResolution;
+        Screen::info.height = vbe->yResolution;
+        Screen::info.bpp = vbe->bitsPerPixel;
 
-        if (!gfx->framebuffer || gfx->width == 0 || gfx->height == 0) {
-            return false;
+        Screen::info.pitch = vbe->getPitch();
+
+        if (Screen::info.pitch == 0) {
+            Screen::info.pitch = Screen::info.width * ((Screen::info.bpp + 7) / 8);
         }
 
 
+        Screen::info.fbdat = vbe->physBasePtr;
 
-        Screen::info.framebuffer = gfx->framebuffer;
-        Screen::info.width = gfx->width;
-        Screen::info.height = gfx->height;
-        Screen::info.pitch = gfx->pitch;
-
-
+        //GraphicsInfo *gfx = (GraphicsInfo *) 0x7000
         Screen::size = Screen::info.height * Screen::info.pitch;
 
+        memcpy((void*)&Screen::buffer, (void*)&Screen::info, sizeof(Screen::buffer));
+        //serial0() << hex << Screen::size << endl;
+        Screen::buffer.framebuffer = (uint64_t*)allocate(Screen::size);
+        //serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
+        //serial0() << hex << (int)Screen::info.framebuffer << endl;
 
-        Screen::buffer = Screen::info;
-        serial0() << hex << Screen::size << endl;
-        Screen::buffer.framebuffer = (uint32_t*)allocate(Screen::size);
-        serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
-        serial0() << hex << (int)Screen::info.framebuffer << endl;
-
-
-
-
-
-
-
-
-
-
-
-
-        Screen::init_graphics();
-
+        fullinfo = *vbe;
 
         return true;
     }
 };
+
+VBEInfo VESADriver::fullinfo;

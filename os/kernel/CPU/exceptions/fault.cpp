@@ -20,7 +20,7 @@ void find_ud2_in_memory(Console console) {
 
 
 void fault_handler(registers_t *regs) {
-
+    s0::put("void fault_handler()\n\r");
     uint32_t original_eip;
 
 
@@ -34,6 +34,7 @@ void fault_handler(registers_t *regs) {
     regs->rip = original_eip;
 
     if (regs->int_no > 31) {
+
         panic("UNKNOWN");
     }
     panic(exception::messages[regs->int_no]);

@@ -2,7 +2,6 @@
 
 #include "../types/types.cpp"
 
-
 bool ssesupp() {
     uint32_t eax, ebx, ecx, edx;
 
@@ -34,3 +33,5 @@ bool avx512supp() {
 
     return (ebx >> 16) & 1;
 }
+
+#include "copy.cpp"

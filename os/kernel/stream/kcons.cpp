@@ -86,7 +86,7 @@ public:
         return &(buffer);
     }
 
-    void clear() {  ///for stacktrace
+    void clear() override {  ///for stacktrace
 
         _kcons::console.clear();
         buffer.clear();

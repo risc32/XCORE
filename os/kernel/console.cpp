@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/utils.cpp"
+#include "cpu/ports.cpp"
 
 class string;
 
@@ -149,6 +150,7 @@ struct Console {
 
     void set_foreground_color(VGAColor color) {
         current_fg_color = color;
+
     }
 
     void set_background_color(VGAColor color) {
@@ -171,9 +173,17 @@ struct Console {
         return (current_bg_color << 4) | (current_fg_color & 0x0F);
     }
 
+    void set_cursor_color(uint8_t color) {
+        hide_cursor();
+
+        outb(0x3C0, 0x10 | 0x20);
+        outb(0x3C0, color);
+
+        show_cursor();
+    }
+
 private:
     void init_scancode_tables() {  ///for stacktrace
-
         const char normal_init[128] = {
                 0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
                 '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -201,19 +211,30 @@ private:
     }
 
     void show_cursor() {  ///for stacktrace
+        update_cursor();
 
-        if (cursor_x < 80 && cursor_y < 25) {
-            int offset = cursor_y * 80 + cursor_x;
-            buffer[offset] = (0x70 << 8) | ' ';
+        cursor(true);
+
+    }
+
+    void cursor(bool enable) {
+        if (enable) {
+
+            outb(0x3D4, 0x0A);
+            outb(0x3D5, 0x0E);
+            outb(0x3D4, 0x0B);
+            outb(0x3D5, 0x0F);
+        } else {
+
+            outb(0x3D4, 0x0A);
+            outb(0x3D5, 0x20);
         }
     }
 
     void hide_cursor() {  ///for stacktrace
+        update_cursor();
 
-        if (cursor_x < 80 && cursor_y < 25) {
-            int offset = cursor_y * 80 + cursor_x;
-            buffer[offset] = (0x07 << 8) | ' ';
-        }
+        cursor(false);
     }
 
 public:
@@ -423,6 +444,17 @@ public:
         if (cursor_y >= 25) cursor_y = 24;
         if (cursor_x < 0) cursor_x = 0;
         if (cursor_y < 0) cursor_y = 0;
+
+        update_cursor();
+    }
+
+    void update_cursor() {
+        unsigned short position = cursor_y * 80 + cursor_x;
+
+        outb(0x3D4, 0x0F);
+        outb(0x3D5, (unsigned char)(position & 0xFF));
+        outb(0x3D4, 0x0E);
+        outb(0x3D5, (unsigned char)((position >> 8) & 0xFF));
     }
 
     void get_cursor(int &x, int &y) {
@@ -549,6 +581,7 @@ string Console::readLine()  {  ///for stacktrace
 
         if (ch == '\n') {
             write("\n");
+            hide_cursor();
             return res;
         } else if (ch == '\b') {
 
@@ -627,6 +660,7 @@ string Console::readLine()  {  ///for stacktrace
             }
         }
     }
+
 }
 
 string Console::prompt(string message) {

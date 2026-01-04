@@ -168,12 +168,12 @@ struct tree {
         return addr;
     }
 
-    inode search(const string& name, uint64_t sec = 0) {
+    inode search(const string& name, uint64_t parent, uint64_t sec = 0) {
         if (sec == 0) sec = sector;
         inode tec = getinode(sec);
         int cmp = str_compare(tec.name, name.c_str());
 
-        if (cmp == 0) {
+        if (cmp == 0 && sec == parent) {
             lastaddr = sec;
             return tec;
         }

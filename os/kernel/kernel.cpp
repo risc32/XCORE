@@ -8,10 +8,7 @@ extern "C" void kernel_entry() {
 #else
     endloader();
 #endif
-
 }
-
-
 
 namespace s0{
     void put(const char* c);
@@ -32,6 +29,8 @@ namespace s0{
 #include "memory/memory.cpp"
 #include "debug/debug.cpp"
 
+
+
 //#define stage2
 //#include "load64/bit64.cpp"
 #ifdef stage2
@@ -46,7 +45,8 @@ volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
     console.clear();
     ATADriver driver = {};
 
-
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, 0x20);
     super_block sb = {};
     driver.read(1, 1, sb.data);
 
@@ -54,31 +54,49 @@ volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
 
     if (sb.kerneladdr == 0) {
         console.writeLine("Kernel address is null - loading from sector 39\n");
-        driver.read(39, 256, (char*)0x20000);
-        kernel_address = 0x20000;
+        driver.read(39, 256, (char*)KERNELADDR);
+        kernel_address = KERNELADDR;
     } else {
         console.writeLine("Loading kernel from filesystem\n");
-        driver.read(sb.kerneladdr, 256, (char*)0x20000);
-        kernel_address = 0x20000;
+        driver.read(sb.kerneladdr, 256, (char*)KERNELADDR);
+        kernel_address = KERNELADDR;
     }
 
 
-    console.writeLine("Kernel loaded at 0x20000\n");
+    console.writeLine("Kernel loaded at "STRKDRR"\n");
 
     //use64();
-    INTEL("jmp 0x20000");
+    //INTEL("mov rsp, 0x7000");
+    INTEL("jmp "STRKDRR);
     panic("Returned from kernel");
 }
 #else
 
 #include "stream/cstatic.cpp"
 #include "SIMD/connect.cpp"
+#include "memory/paging/paging.cpp"
+
+uint64_t getstack() {
+    uint64_t sp;
+    asm volatile("mov %%rsp, %0" : "=r"(sp));
+    s0::put("\n\rstack: ");
+    s0::puthex(sp);
+    s0::put("\n\r");
+    return sp;
+}
+
+void setstack(uint64_t sp) {
+    asm volatile("mov %0, %%rsp" : : "r"(sp));
+    s0::put("\n\rstack: ");
+    s0::puthex(sp);
+    s0::put("\n\r");
+}
 
 extern "C" [[noreturn]] void endloader() {
+
+
     asm volatile(
-
             "fninit\n"
-
 
             "movq %%cr0, %%rax\n"
             "andq $0xFFFFFFFFFFFFFFFB, %%rax\n"
@@ -95,10 +113,23 @@ extern "C" [[noreturn]] void endloader() {
             );
     s0::put("SSE/FPU : enabled\n");
     s0::put("void endloader() 0x20000 .text\n");
+
+    asm volatile(
+            "mov $0x10, %%ax\n"
+            "mov %%ax, %%ds\n"
+            "mov %%ax, %%es\n"
+            "mov %%ax, %%fs\n"
+            "mov %%ax, %%gs\n"
+            "mov %%ax, %%ss\n"
+            : : : "rax"
+            );
+
     exception::init();
     _kcons::init();
     disk::init();
+
     //disk::read(KERNEL+128, 128, (char*)0x20000);
+    //setstack(0xFF);
     _start();
 }
 
@@ -111,16 +142,11 @@ extern "C" [[noreturn]] void endloader() {
 #include "time/time.cpp"
 #include "graphics/graphics.cpp"
 
-extern "C" [[noreturn]] void  _start() {
+#define GBPAG 8
+
+extern "C" [[noreturn]] void _start() {
     s0::put("void _start() KERNEL 0x20000 .text\n");
 
-    //FunctionTracerRAII __tracer_raii{"_function_name_", (int) __builtin_return_address(0)};
-    outb(0x3D4, 0x0A);
-    outb(0x3D5, 0x20);
-    exception::init();
-    _kcons::init();
-    disk::init();
-    //disk::read(KERNEL+128, 128, (char*)0x20000);
     memory::init();
     autotest();
 
@@ -130,13 +156,25 @@ extern "C" [[noreturn]] void  _start() {
     filesystem::init();
 
     filesystem::mount();
-
     kout.clear();
 
+    kout << WHITE << "XCore :: CONSOLE";
+    kout << reset << " KERNEL v1.2 / Type 'help' for information" << endl << endl;    //paging::mappg();
+    Progress hp(100, 20, "HEAP ALIGN Checking");
+    for (int i = 0; i < 100; ++i) {
+        void* alloc = malloc(i);
+        if ((uint64_t)alloc%64!=0) serial0() << "ALIGN ERROR" << endl;
+        free(alloc);
+        hp.increment();
+    }
+    hp.finish();
+    kout << endl;
+
+
+    kout.clear();
     filesystem::bst.insert(inode{"pidoras", it_file});
-
-    //memcpy((void*)0x7c00, (void*)&rbunny, 512);
-
+    uint64_t m = 0x40000000;
+    paging::gmap(0, 8);
 
     string com1 = "";
     kout << WHITE << "XCore :: CONSOLE";
@@ -144,20 +182,19 @@ extern "C" [[noreturn]] void  _start() {
 
     kout << (*(bool*)ISBADDR ? "Basic Input/Output System [BIOS]" : "Unified Extensible Firmware Interface [UEFI]") << endl << endl;
 
-    VESADriver::init();
-    //Screen::info.framebuffer = (volatile uint32_t *)0xA0000000;
     disk::write(1488, (char*)0x8000);
     disk::write(1489, (char*)0x8200);
-
+    VESADriver::init();
     int x = 0, y = 0;
-    if (Screen::isConsole()) while(true) {
-        //Screen::draw_rect(x, y, x+30, y+44, 0xFFFFFFFF);
+    serial0() << "DFB: " << Screen::buffer.framebuffer << endl;
+    if (!Screen::isConsole())
+    while(true) {
+        Screen::draw_rect(x, y, x+30, y+30, 0xFFFFFFFF);
         x++,y++;
-        //Screen::frame();
-        //Screen::clear();
+        Screen::frame();
+        Screen::clear();
     }
-    //biosgraph::draw(50, 100, 0x00FF00FF);
-    disk::write(1023, (char*)0x7e00);
+
     string com = "";
     while (true) {
         kout << "> ";
@@ -171,5 +208,7 @@ extern "C" [[noreturn]] void  _start() {
 
         cmd::execute(com);
     }
+
+
 }
 #endif

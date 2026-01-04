@@ -60,13 +60,93 @@ struct filesystem {
 #endif
     }
 
+    static inode getfpath(string path) {
+        auto spl = split(path, '/');
+        inode parent;
+        string fname = spl.back();
+        spl.pop_back();
+        uint64_t lsec = bst.sector;
+        for (auto& s : spl) {
+            if (s == "") panic("Invalid path");
+            parent = bst.search(s, lsec);
+            if (parent.type == it_none) panic("Path not found");
+        }
+
+        inode f = bst.search(fname, lsec);
+        if (f.type == it_none) panic("Path not found");
+        return f;
+    }
+
     static inode create_file(string name) {
         auto spl = split(name, '/');
-        if (bst.search(spl[spl.size()-2]).type != it_file) panic("There cannot be other elements in the file");
-        inode ind(spl[spl.size()-1], it_file, 644, bst.lastaddr);
-        memcpy(ind.fragments, fragment::hardwarealloc(1).data(), sizeof ind.fragments);\
+        inode parent;
+        string fname = spl.back();
+        spl.pop_back();
+        uint64_t lsec = bst.sector;
+        for (auto& s : spl) {
+            if (s == "") panic("Invalid path");
+            parent = bst.search(s, lsec);
+            if (parent.type == it_none) panic("Path not found");
+        }
+        if (parent.type != it_file) panic("There cannot be other elements in the file");
+        inode ind(fname, it_file, 644, lsec);
+        memcpy(ind.fragments, fragment::hardwarealloc(1).data(), sizeof ind.fragments);
         bst.insert(ind);
         return ind;
+    }
+
+    static inode create_dir(string name) {
+        auto spl = split(name, '/');
+        inode parent;
+        string fname = spl.back();
+        spl.pop_back();
+        uint64_t lsec = bst.sector;
+        for (auto& s : spl) {
+            if (s == "") panic("Invalid path");
+            parent = bst.search(s, lsec);
+            if (parent.type == it_none) panic("Path not found");
+        }
+        if (parent.type != it_file) panic("There cannot be other elements in the file");
+        inode ind(fname, it_file, 644, lsec);
+        memcpy(ind.fragments, fragment::hardwarealloc(1).data(), sizeof ind.fragments);
+        bst.insert(ind);
+        return ind;
+    }
+
+    static inode open_file(string name) {
+        auto spl = split(name, '/');
+        inode parent;
+        string fname = spl.back();
+        spl.pop_back();
+        uint64_t lsec = bst.sector;
+        for (auto& s : spl) {
+            if (s == "") panic("Invalid path");
+            parent = bst.search(s, lsec);
+            if (parent.type == it_none) panic("Path not found");
+        }
+        return bst.search(fname, lsec);
+    }
+
+    static void remove(string name) {
+        auto spl = split(name, '/');
+        inode parent;
+        string fname = spl.back();
+        spl.pop_back();
+        uint64_t lsec = bst.sector;
+        for (auto& s : spl) {
+            if (s == "") panic("Invalid path");
+            parent = bst.search(s, lsec);
+            if (parent.type == it_none) panic("Path not found");
+        }
+        //TODO: bst.remove(fname, lsec);
+    }
+
+    static void remove(inode ind) {
+        //TODO: bst.remove(ind);
+    }
+
+    static managed<string> list(string name) {
+
     }
 
     static void format();

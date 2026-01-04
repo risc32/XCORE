@@ -3,42 +3,35 @@
 #include "../types/types.cpp"
 #include "graphics.cpp"
 
-class VGADriver {
+struct VGADriver {
     static bool init() {
+        s0::put("void VESADriver::init() KERNEL 0x20000 .text\n");
 
-        GraphicsInfo* gfx = (GraphicsInfo*)0x7000;
-
-
-
+        GraphicsInfo *gfx = (GraphicsInfo *) 0x7000;
 
 
-        Screen::info.framebuffer = (uint32_t*)gfx->framebuffer;
+        if (!gfx->framebuffer || gfx->width == 0 || gfx->height == 0) {
+            return false;
+        }
+
+
+
+        Screen::info.framebuffer = gfx->framebuffer;
+        Screen::info.bpp = gfx->bpp;
         Screen::info.width = gfx->width;
         Screen::info.height = gfx->height;
         Screen::info.pitch = gfx->pitch;
+
+
+        Screen::size = Screen::info.height * Screen::info.pitch;
+
+
+        Screen::buffer = Screen::info;
+        //serial0() << hex << Screen::size << endl;
+        Screen::buffer.framebuffer = (uint64_t*)allocate(Screen::size);
+        //serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
+        //serial0() << hex << (int)Screen::info.framebuffer << endl;
+
         return true;
-    }
-
-    static void put_pixel(uint32_t x, uint32_t y, uint32_t color) {
-        if (x >= Screen::info.width || y >= Screen::info.height) return;
-
-        uint32_t offset = y * (Screen::info.pitch / 4) + x;
-        Screen::info.framebuffer[offset] = color;
-    }
-
-    static void draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
-        for (uint32_t i = y; i < y + h && i < Screen::info.height; i++) {
-            for (uint32_t j = x; j < x + w && j < Screen::info.width; j++) {
-                put_pixel(j, i, color);
-            }
-        }
-    }
-
-    static void clear_screen(uint32_t color) {
-        for (uint32_t i = 0; i < Screen::info.height; i++) {
-            for (uint32_t j = 0; j < Screen::info.width; j++) {
-                put_pixel(j, i, color);
-            }
-        }
     }
 };

@@ -40,12 +40,12 @@ MemoryInfoE801 detect_memory() {
 #define HEAP_SIZE (80*1024*1024)
 #define MAXB_SIZE 512
 #define MINB_SIZE 32
-#define ALIGN 32
+#define ALIGN 64
 
 
 void memzero(void *, size_t);
 
-struct memory_block {
+struct alignas(64) memory_block {
     int mbid;
     bool used;
     memory_block *next;
@@ -54,7 +54,8 @@ struct memory_block {
 };
 
 struct memory {
-    static char heap[HEAP_SIZE];
+
+    alignas(64) static char heap[HEAP_SIZE];
     static memory_block *first;
     static const memory_block * const last;
 
@@ -96,7 +97,28 @@ struct memory {
     }
 };
 
-char memory::heap[HEAP_SIZE] = {};
+uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
+
+    uint64_t aligned_phys = phys_addr & ~0xFFFULL;
+    uint64_t offset = phys_addr - aligned_phys;
+
+
+    uint64_t aligned_size = (size + offset + 0xFFF) & ~0xFFFULL;
+
+
+    for(uint64_t i = 0; i < aligned_size; i += 0x1000) {
+        uint64_t page_phys = aligned_phys + i;
+        uint64_t page_virt = 0 + i;
+
+
+
+    }
+
+
+    //return (void*)(0 + offset);
+}
+
+alignas(64) char memory::heap[HEAP_SIZE] = {};
 memory_block *memory::first = (memory_block *) memory::heap;
 const memory_block * const memory::last = (memory_block *) memory::heap;
 
@@ -113,3 +135,5 @@ int memory::mbids = 0;
 #include "free.cpp"
 #include "realloc.cpp"
 #endif
+
+#include "paging/paging.cpp"

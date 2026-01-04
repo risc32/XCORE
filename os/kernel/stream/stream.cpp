@@ -35,7 +35,7 @@ public:
         return !eof();
     }
 
-    void clear() {  ///for stacktrace
+    virtual void clear() {  ///for stacktrace
 
         buffer.clear();
     }
@@ -122,6 +122,14 @@ public:
         debug(__PRETTY_FUNCTION__ );
 
         putstr(to_wstring(b, base));
+        flush();
+        return *this;
+    }
+
+    template<typename T> ostream& operator<<(T* b) {
+        debug(__PRETTY_FUNCTION__ );
+
+        putstr(to_wstring((uint64_t )b, 16));
         flush();
         return *this;
     }

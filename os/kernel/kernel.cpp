@@ -52,16 +52,21 @@ volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
 
     uint64_t kernel_address = 0;
 
+    int sectors = 1024;
+
     if (sb.kerneladdr == 0) {
         console.writeLine("Kernel address is null - loading from sector 39\n");
-        driver.read(39, 256, (char*)KERNELADDR);
-        kernel_address = KERNELADDR;
+        sb.kerneladdr = 39;
     } else {
         console.writeLine("Loading kernel from filesystem\n");
-        driver.read(sb.kerneladdr, 256, (char*)KERNELADDR);
-        kernel_address = KERNELADDR;
     }
 
+
+
+    for (int i = 0; i < sectors / 256; i++) {
+        console.write(".");
+        driver.read(sb.kerneladdr + i * 256, 256, (char*)KERNELADDR + i * 512 * 256);
+    }
 
     console.writeLine("Kernel loaded at "STRKDRR"\n");
 
@@ -141,6 +146,7 @@ extern "C" [[noreturn]] void endloader() {
 #include "xcfs/xcfs.cpp"
 #include "time/time.cpp"
 #include "graphics/graphics.cpp"
+#include "../../tools/charlie.hpp"
 
 #define GBPAG 8
 
@@ -187,9 +193,38 @@ extern "C" [[noreturn]] void _start() {
     VESADriver::init();
     int x = 0, y = 0;
     serial0() << "DFB: " << Screen::buffer.framebuffer << endl;
-    if (!Screen::isConsole())
+
+    bool b[] = {
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,1,0,0,0,0,
+        0,0,1,1,1,0,0,0,
+        0,1,1,0,1,1,0,0,
+        1,1,0,0,0,1,1,0,
+        1,1,0,0,0,1,1,0,
+        1,1,1,1,1,1,1,0,
+        1,1,0,0,0,1,1,0,
+        1,1,0,0,0,1,1,0,
+        1,1,0,0,0,1,1,0,
+        1,1,0,0,0,1,1,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0
+    };
+
+    Raster charlie{};
+    charlie.size_y = my_icon_height;
+    charlie.size_x = my_icon_width;
+    charlie.map = my_icon_data;
+
+    if (!Screen::isConsole()) {
+
+
+    }
     while(true) {
-        Screen::draw_rect(x, y, x+30, y+30, 0xFFFFFFFF);
+        charlie.draw(x, y, Screen::buffer);
+
         x++,y++;
         Screen::frame();
         Screen::clear();

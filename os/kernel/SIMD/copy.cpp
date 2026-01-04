@@ -19,7 +19,7 @@ namespace simd {
                     );
         } else if constexpr (N == 32) {
             __asm__ volatile (
-                    "vmovdqu (%1), %%ymm0\n\t"  /
+                    "vmovdqu (%1), %%ymm0\n\t"
                     "vmovdqu %%ymm0, (%0)"
                     :
                     : "r"(dst), "r"(src)
@@ -27,7 +27,7 @@ namespace simd {
                     );
         } else if constexpr (N == 64) {
             __asm__ volatile (
-                    "vmovdqu64 (%1), %%zmm0\n\t" /
+                    "vmovdqu64 (%1), %%zmm0\n\t"
                     "vmovdqu64 %%zmm0, (%0)"
                     :
                     : "r"(dst), "r"(src)

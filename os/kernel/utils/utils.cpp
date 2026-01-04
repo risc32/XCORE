@@ -14,19 +14,15 @@
 
 #define INTEL(x) asm volatile ("\n.intel_syntax noprefix");asm volatile (x); asm volatile(".att_syntax prefix")
 
-/
 #define IRR(cmd, src, dest) \
     INTEL(#cmd " " #src ", " #dest)
 
-/
 #define IVR(cmd, var, reg) \
     INTEL(#cmd " %0, " #reg : "=r"(var));
 
-/
 #define IRV(cmd, reg, var) \
     INTEL(#cmd " " #reg ", %0" : "=r"(var));
 
-/
 #define IRC(cmd, reg, const_val) \
     INTEL(#cmd " " #reg ", " #const_val);
 

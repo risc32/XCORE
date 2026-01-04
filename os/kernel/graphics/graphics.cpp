@@ -6,9 +6,11 @@
 #include "../debug/inited.cpp"
 #include "crtc.cpp"
 
+#include "basic.cpp"
+
 struct Screen {
-    static volatile GraphicsInfo info;
-    static volatile GraphicsInfo buffer;
+    static GraphicsInfo info;
+    static GraphicsInfo buffer;
 
 
     static size_t size;
@@ -39,14 +41,6 @@ struct Screen {
         return info.framebuffer == nullptr;
     }
 
-    static void iput_pixel24(uint32_t x, uint32_t y, _co_uint24_t color, volatile GraphicsInfo& target_info) {
-        target_info.fb24[y * (target_info.pitch / 3) + x] = color;
-    }
-
-    static void iput_pixel32(uint32_t x, uint32_t y, uint32_t color, volatile GraphicsInfo& target_info) {
-        target_info.fb32[y * (target_info.pitch / 4) + x] = color;
-    }
-
     static void iclear(volatile GraphicsInfo& target_info, uint32_t color) {
         if (!target_info.framebuffer || target_info.pitch == 0)
             panic("Framebuffer invalid");
@@ -61,16 +55,16 @@ struct Screen {
     }
 
     static void draw(uint32_t x, uint32_t y, uint32_t color) {
-        if (info.bpp == 24) iput_pixel24(x, y, uint24(color), buffer);
-        else if (info.bpp == 32) iput_pixel32(x, y, color, buffer);
+        if (info.bpp == 24) _iput_pixel24(x, y, uint24(color), buffer);
+        else if (info.bpp == 32) _iput_pixel32(x, y, color, buffer);
     }
 
     static void draw24(uint32_t x, uint32_t y, _co_uint24_t color) {
-        iput_pixel24(x, y, color, buffer);
+        _iput_pixel24(x, y, color, buffer);
     }
 
     static void draw32(uint32_t x, uint32_t y, uint32_t color) {
-        iput_pixel32(x, y, color, buffer);
+        _iput_pixel32(x, y, color, buffer);
     }
 
     static void draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
@@ -120,9 +114,11 @@ private:
 };
 
 #include "vesa.cpp"
+#include "text/text.cpp"
+#include "raster.cpp"
 //#include "vga.cpp"
 
-volatile GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
-volatile GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};
+GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
+GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};
 size_t Screen::size = 0;
 bool Screen::double_buffered = false;

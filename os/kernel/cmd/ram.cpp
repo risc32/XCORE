@@ -118,17 +118,31 @@ int ram(const managed<string>& args) {
             } else if (c == 'W') {
                 addr -= 1024;
             }
-            kout.clear();
-            kout << "Press SPACE to exit\nKey [lower W] - Change the address by 64\nKey [lower S] - Change the address by -64\nKey [upper W] - Change the address by 1024\nKey [upper S] - Change the address by -1024" << endl;
+            Screen::clear();
+            _kcons::console.write( "Press SPACE to exit\nKey [lower W] - Change the address by 64\nKey [lower S] - Change the address by -64\nKey [upper W] - Change the address by 1024\nKey [upper S] - Change the address by -1024\n", true);
             for (char* i = addr; i < addr+1024; ++i) {
                 if ((i - addr) % 64 == 0) {
-                    kout << ' ' << swidth(to_wstring((int)i, 16), 6) << " > ";
+                    _kcons::console.write((swidth(to_string((int)i, 16), 6) + string(" | ")).c_str(), false);
                 }
-                kout << (*i != '\n' ? *i : ' ');
+
+                char ch = *i;
+
+                switch (ch) {
+                    case '\n':
+                    case '\r':
+                    case '\b':
+                        ch = ' ';
+                        break;
+
+                }
+
+                _kcons::console.write(ch, false);
                 if ((i - addr) % 64 == 63) {
-                    kout << endl;
+                    _kcons::console.write('\n', false);
                 }
             }
+            Screen::frame();
+
         } while((c = _kcons::console.readChar()) != ' ');
     } else {
         kout << "UNKNOWN COMMAND: " << '"' << com << '"' << endl;

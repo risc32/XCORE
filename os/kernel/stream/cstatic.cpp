@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../console.cpp"
+#include "../graphics/text/console.hpp"
+#include "../debug/debug.cpp"
 
 struct _kcons {
     static Console console;
@@ -11,6 +12,8 @@ struct _kcons {
         console = Console();
     }
 };
+
+#define mcon _kcons::console
 
 void waitChar(char c) {
     while (_kcons::console.readChar() != c);

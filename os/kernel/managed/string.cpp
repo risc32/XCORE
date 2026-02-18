@@ -85,6 +85,8 @@ struct string : public managed<char> {
         return result;
     }
 
+
+
     string(char c) : managed<char>() {
         nullend = true;
         push_back(c);
@@ -220,13 +222,14 @@ struct wstring : public managed<wchar_t> {
         }
     }
 
-
     const wchar_t* c_str() const {
         return _data;
     }
 };
 
-string operator ""_s(const char *s) {
+#include "../utils/utils.cpp"
+
+const string operator"" _s(const char *s, size_t n) {
     return string(s);
 }
 
@@ -235,6 +238,8 @@ string to_string(long long val, int base = 10) {
 
     return string(ltoa(val, buf, base));
 }
+
+
 
 wstring to_wstring(long long val, int base = 10) {
     char buf[32];
@@ -298,4 +303,69 @@ int to_int64(const wstring &s, int base = 10) {
         temp.push_back(static_cast<char>(s[i]));
     }
     return atoi(temp.c_str(), base);
+}
+
+#include "../math/math.cpp"
+string to_string(double value, int precision = 15) {
+
+
+    if (Math::isnan(value)) return "nan";
+    if (Math::isinf(value)) return value > 0 ? "inf" : "-inf";
+
+
+    if (value == 0.0) return "0";
+
+    string result;
+
+
+    if (value < 0) {
+        result += '-';
+        value = -value;
+    }
+
+
+    long long intPart = static_cast<long long>(value);
+    double fracPart = value - intPart;
+
+
+    string intStr;
+
+    if (intPart == 0) {
+        intStr = "0";
+    } else {
+        while (intPart > 0) {
+            intStr = string('0' + (intPart % 10)) + intStr;
+            intPart /= 10;
+        }
+    }
+
+    result += intStr;
+
+
+    if (fracPart > 0 && precision > 0) {
+        result += '.';
+
+
+        if (precision > 15) precision = 15;
+
+        for (int i = 0; i < precision; i++) {
+            fracPart *= 10;
+            int digit = static_cast<int>(fracPart);
+            result += char('0' + digit);
+            fracPart -= digit;
+
+
+            if (fracPart < 1e-15) break;
+        }
+
+
+        while (!result.empty() && result.back() == '0') {
+            result.pop_back();
+        }
+        if (!result.empty() && result.back() == '.') {
+            result.pop_back();
+        }
+    }
+
+    return result;
 }

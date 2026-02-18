@@ -44,7 +44,7 @@ void* parseaddr(string s) {
 
 void blockinfo(KernelOut kout, memory_block* block) {
     bool used = block->used;
-    kout << setw(10) << dec << block->mbid << hex << used << wstring("@") + to_wstring((uint32_t)block, 16) << wstring("x") + to_wstring((uint32_t)block - (uint32_t)memory::heap, 16) << dec << block->size << endl;
+    kout << setw(10) << dec << block->mbid << hex << used << wstring("@") + to_wstring((uint32_t)block, 16) << wstring("x") + to_wstring((uint32_t)block - (uint32_t)memory::heap, 16) << dec << (int)block->size << endl;
 }
 
 void blocktable(KernelOut kout) {

@@ -15,8 +15,8 @@ void check(TestResult *resbuf, unsigned short *cbuf, Console console, int count)
             passed_count++;
         }
         if (!resbuf[i].passed) {
-            console.write(resbuf[i].passed ? "[----] " : "[FAIL] ");
-            console.writeLine(resbuf[i].test_name);
+            console.write(resbuf[i].passed ? "[----] " : "[FAIL] ", true);
+            console.writeLine(resbuf[i].test_name, true);
             score = false;
         }
     }
@@ -31,14 +31,14 @@ void check(TestResult *resbuf, unsigned short *cbuf, Console console, int count)
 void autotest() {  ///for stacktrace
 
     unsigned short cbuf[4000] = {};
-    Console console = Console(cbuf);
+    Console console = Console();
     //console.set_color(LI, MAGENTA);
 
-    console.writeLine("KERNEL PANIC\n");
-    console.writeLine("AUTOTEST FAILED");
+    console.writeLine("KERNEL PANIC\n", true);
+    console.writeLine("AUTOTEST FAILED", true);
     TestResult resbuf[20] = {};
 
-    console.writeLine("MEMORY TEST");
+    console.writeLine("MEMORY TEST", true);
     s0::put("DIA.00 KERNEL 0x20000 .text\n");
 
     check(resbuf, cbuf, console, memtest(resbuf));

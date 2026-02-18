@@ -9,7 +9,7 @@
 #define VERSION 1
 #define BLOCK_SIZE 512
 
-struct node {
+struct __attribute__((packed)) node {
     uint64_t parent;
 
     uint64_t a;
@@ -18,6 +18,14 @@ struct node {
     int depth;
 
     int size;
+} ;
+
+struct dir_entry {
+    uint64_t inode;
+    uint16_t next_offset;
+    uint8_t name_len;
+    uint8_t type;
+    char name[256];
 };
 #endif
 
@@ -69,7 +77,7 @@ union inode {
 
         uint64_t created;
         uint64_t modified;
-        uint64_t accessed;
+        uint16_t bytes;
 
         uint64_t link_count;
         uint64_t uid;
@@ -78,8 +86,21 @@ union inode {
         char name[80];
     };
 
+    uint64_t getsize() const {
+        for (int i = 19; i >= 0; --i) {
+            if (fragments[i].blocks != 0) {
+                return fragments[i].blocks * 512 + (bytes % 512);
+            }
+        }
+        return 0;
+    }
+
+    bool valid() {
+        return type != it_none;
+    }
+
     inode (const string& filename, inode_type type = it_file,
-                            uint64_t permissions = 0644, uint64_t parent = 0): name{0} {
+           uint64_t permissions = 0644, uint64_t parent = 0): name{0} {
 
 
         this->type = type;
@@ -94,7 +115,7 @@ union inode {
 
         created = 0;
         modified = 0;
-        accessed = 0;
+        bytes = 0;
 
         nd.parent = parent;
         nd.a = 0;

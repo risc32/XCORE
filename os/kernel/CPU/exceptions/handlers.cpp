@@ -13,10 +13,9 @@ extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
     s0::puthex(int_no);
     s0::put("\n\r");
 
-
     Console console;
-    console.clear();
-    console.write(int_no);
+
+
     //stop();
 
     registers_t regs = {};

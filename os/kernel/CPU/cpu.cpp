@@ -7,6 +7,7 @@
 #endif
 #include "ports.cpp"
 #include "exceptions/exceptions.cpp"
+#include "msr.cpp"
 
 #ifndef stage2
 #include "rtti.cpp"

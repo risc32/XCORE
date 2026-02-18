@@ -13,6 +13,10 @@ wstring swidth(wstring s, int w) {
     return s + wstring(max(w - s.size(), 0), ' ');
 }
 
+string swidth(string s, int w) {
+    return s + string(max(w - s.size(), 0), ' ');
+}
+
 class stream_base {
 protected:
     wstring buffer;
@@ -183,6 +187,18 @@ public:
             putstr(b ? L"1" : L"0");
         }
         flush();
+        return *this;
+    }
+
+    ostream& operator<<(double b) {
+        putstr(to_string(b));
+
+        return *this;
+    }
+
+    ostream& operator<<(float b) {
+        putstr(to_string(b));
+
         return *this;
     }
 

@@ -7,22 +7,22 @@ class string;
 
 
 enum VGAColor {
-    BLACK = 0,
-    BLUE = 1,
-    GREEN = 2,
-    CYAN = 3,
-    RED = 4,
-    MAGENTA = 5,
-    BROWN = 6,
-    LIGHT_GRAY = 7,
-    DARK_GRAY = 8,
-    LIGHT_BLUE = 9,
-    LIGHT_GREEN = 10,
-    LIGHT_CYAN = 11,
-    LIGHT_RED = 12,
-    LIGHT_MAGENTA = 13,
-    YELLOW = 14,
-    WHITE = 15
+    vgaBLACK = 0,
+    vgaBLUE = 1,
+    vgaGREEN = 2,
+    vgaCYAN = 3,
+    vgaRED = 4,
+    vgaMAGENTA = 5,
+    vgaBROWN = 6,
+    vgaLIGHT_GRAY = 7,
+    vgaDARK_GRAY = 8,
+    vgaLIGHT_BLUE = 9,
+    vgaLIGHT_GREEN = 10,
+    vgaLIGHT_CYAN = 11,
+    vgaLIGHT_RED = 12,
+    vgaLIGHT_MAGENTA = 13,
+    vgaYELLOW = 14,
+    vgaWHITE = 15
 };
 
 
@@ -96,7 +96,7 @@ inline void int_to_hex(unsigned int number, char *buffer) {
     buffer[i] = '\0';
 }
 
-struct Console {
+struct TextConsole {
     volatile unsigned short *buffer;
     int cursor_x, cursor_y;
 
@@ -113,7 +113,7 @@ struct Console {
     static bool key_processed;
     int scrolled = 0;
 
-    explicit Console(unsigned short *buffer) {
+    explicit TextConsole(unsigned short *buffer) {
         this->buffer = buffer;
         cursor_x = 0;
         cursor_y = 0;
@@ -124,19 +124,19 @@ struct Console {
         last_scancode = 0;
         key_processed = true;
 
-        current_fg_color = LIGHT_GRAY;
-        current_bg_color = BLACK;
+        current_fg_color = vgaLIGHT_GRAY;
+        current_bg_color = vgaBLACK;
         init_scancode_tables();
     }
 
-    explicit Console(int bufaddr = 0xB8000) {
+    explicit TextConsole(int bufaddr = 0xB8000) {
         buffer = (volatile unsigned short *) bufaddr;
         cursor_x = 0;
         cursor_y = 0;
 
 
-        current_fg_color = LIGHT_GRAY;
-        current_bg_color = BLACK;
+        current_fg_color = vgaLIGHT_GRAY;
+        current_bg_color = vgaBLACK;
 
         shift_pressed = false;
         caps_lock = false;
@@ -164,8 +164,8 @@ struct Console {
 
     void reset_color() {  ///for stacktrace
 
-        current_fg_color = LIGHT_GRAY;
-        current_bg_color = BLACK;
+        current_fg_color = vgaLIGHT_GRAY;
+        current_bg_color = vgaBLACK;
     }
 
 
@@ -535,7 +535,7 @@ public:
 
 };
 
-char Console::scancode_normal[128] = {
+char TextConsole::scancode_normal[128] = {
         0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
         '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
         0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
@@ -545,7 +545,7 @@ char Console::scancode_normal[128] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-char Console::scancode_shift[128] = {
+char TextConsole::scancode_shift[128] = {
         0, 27, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
         '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
         0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
@@ -555,17 +555,17 @@ char Console::scancode_shift[128] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-bool Console::shift_pressed = false;
-bool Console::caps_lock = false;
-bool Console::ctrl_pressed = false;
-bool Console::alt_pressed = false;
-unsigned char Console::last_scancode = 0;
-bool Console::key_processed = true;
+bool TextConsole::shift_pressed = false;
+bool TextConsole::caps_lock = false;
+bool TextConsole::ctrl_pressed = false;
+bool TextConsole::alt_pressed = false;
+unsigned char TextConsole::last_scancode = 0;
+bool TextConsole::key_processed = true;
 
 #ifndef stage2
 #include "managed/managed.cpp"
 
-string Console::readLine()  {  ///for stacktrace
+string TextConsole::readLine()  {  ///for stacktrace
     uint8_t attribute = get_attribute();
     string res = "";
 
@@ -663,8 +663,8 @@ string Console::readLine()  {  ///for stacktrace
 
 }
 
-string Console::prompt(string message) {
-    Console::write(message.data());
+string TextConsole::prompt(string message) {
+    TextConsole::write(message.data());
     return readLine();
 }
 

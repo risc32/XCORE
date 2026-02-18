@@ -4,9 +4,9 @@
 
 struct GraphicsInfo {
     union {
-        volatile uint32_t *fb32;
-        volatile uint16_t *fb16;
-        volatile uint8_t *fb8;
+        uint32_t *fb32;
+        uint16_t *fb16;
+        uint8_t *fb8;
         _co_uint24_t *fb24;
 
         void *framebuffer;
@@ -16,9 +16,18 @@ struct GraphicsInfo {
     uint32_t height;
     uint32_t pitch;
     uint32_t bpp;
+    bool rgb;
 
-    bool is24bpp() {
+    bool is24bpp() const {
         return bpp == 24;
+    }
+
+    void set24(uint64_t pos, _co_uint24_t col) {
+        fb24[pos] = col;
+    }
+
+    void set32(uint64_t pos, int col) {
+        fb32[pos] = col;
     }
 } __attribute__((packed));
 

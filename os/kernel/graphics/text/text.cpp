@@ -3,37 +3,21 @@
 #include "../../utils/utils.cpp"
 #include "../gfxtypes.cpp"
 #include "../basic.cpp"
+#include "../raster.cpp"
+#include "../fonts/font.cpp"
 
-struct CharBitmap {
-    bool* bitmap;
+void _idraw_char(unsigned char c, int x, int y, const GraphicsInfo& info, const Font& font, int fg, int bg) {
+    RasterBitmap bmp{};
 
-    int size_x;
-    int size_y;
+    bmp.bitmap = font.getchar(c);
+    bmp.size_x = font.size_x;
+    bmp.size_y = font.size_y;
+    bmp.draw(x, y, info, fg, bg);
+}
 
-    void draw24(int x, int y, GraphicsInfo info, _co_uint24_t color) const {
-        for (int i = 0; i < size_y; ++i) {
-            for (int j = 0; j < size_x; ++j) {
-                if (bitmap[i * size_x + j]) {
-                    _iput_pixel24(x + j, y + i, color, info);
-                }
-            }
-        }
+void _idraw_string(const char* str, int x, int y, const GraphicsInfo& info, const Font& font, int fg, int bg) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        _idraw_char(str[i], x, y, info, font, fg, bg);
+        x += font.size_x;
     }
-    void draw32(int x, int y, GraphicsInfo info, int color) const {
-        for (int i = 0; i < size_y; ++i) {
-            for (int j = 0; j < size_x; ++j) {
-                if (bitmap[i * size_x + j]) {
-                    _iput_pixel32(x + j, y + i, color, info);
-                }
-            }
-        }
-    }
-
-    void draw(int x, int y, GraphicsInfo info, int color) const {
-        if (info.is24bpp()) {
-            draw24(x, y, info, uint24(color));
-        } else {
-            draw32(x, y, info, color);
-        }
-    }
-};
+}

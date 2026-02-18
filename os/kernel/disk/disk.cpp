@@ -33,6 +33,13 @@ struct disk {
     static bool write(uint64_t lba, const char *data) {
         return driver.write(lba, data);
     }
+
+    static bool write(uint64_t lba, uint32_t count, const char *data) {
+        for (int i = 0; i < count; i++) {
+            if (!driver.write(lba + i, data + (i * 512)))
+                return false;
+        }
+    }
 };
 
 ATADriver disk::driver = {};

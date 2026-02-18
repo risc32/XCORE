@@ -35,3 +35,4 @@ bool avx512supp() {
 }
 
 #include "copy.cpp"
+#include "enable.cpp"

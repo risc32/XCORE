@@ -2,7 +2,7 @@
 
 #include "../memory/memory.cpp"
 #include "../utils/utils.cpp"
-#include "../console.cpp"
+#include "../graphics/text/console.hpp"
 #include "restype.cpp"
 
 

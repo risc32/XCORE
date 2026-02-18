@@ -1,16 +1,17 @@
 #pragma once
 
 #include "stream.cpp"
-#include "../console.cpp"
+#include "../graphics/text/console.hpp"
 #include "cstatic.cpp"
 #include "../managed/managed.cpp"
+#include "../graphics/graphics.cpp"
 
 void debug(const string& s, bool ac) {
 #ifdef DEBUG
     VGAColor c = (VGAColor)_kcons::console.current_fg_color;
     _kcons::console.set_foreground_color(DARK_GRAY);
-    _kcons::console.writeLine("");
-    _kcons::console.writeLine(s.data());
+    _kcons::console.writeLine("", true);
+    _kcons::console.writeLine(s.data(), true);
     if (ac) _kcons::console.readChar();
     _kcons::console.set_foreground_color(c);
 #endif
@@ -47,7 +48,7 @@ public:
 
 struct _workersetc {
     bool bg;
-    VGAColor color;
+    Color color;
 };
 
 class KernelOut : public ostream {
@@ -55,7 +56,9 @@ protected:
     //Console console = Console();
 
     void _flush() override {
-        _kcons::console.write(buffer.data());
+        _kcons::console.write(buffer.data(), true);
+        //Screen::out(buffer.data());
+        //Screen::frame();
     }
 public:
     KernelOut () : ostream() {  ///for stacktrace
@@ -76,7 +79,7 @@ public:
         else _kcons::console.set_foreground_color(col.color);
         return *this;
     }
-    KernelOut& operator<<(VGAColor col) {
+    KernelOut& operator<<(Color col) {
         _kcons::console.set_foreground_color(col);
         return *this;
     }
@@ -87,17 +90,18 @@ public:
     }
 
     void clear() override {  ///for stacktrace
-
+        //Screen::clear();
+        //Screen::clear(0, Screen::info);
         _kcons::console.clear();
         buffer.clear();
     }
 };
 
-_workersetc fg(VGAColor color) {
+_workersetc fg(Color color) {
     return {false, color};
 }
 
-_workersetc bg(VGAColor color) {
+_workersetc bg(Color color) {
     return {true, color};
 }
 

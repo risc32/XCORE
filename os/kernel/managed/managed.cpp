@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../memory/memory.cpp"
-#include "../cpu/cpu.cpp"
+//#include "../cpu/cpu.cpp"
 //#include "initlist.cpp"
+
+void* calloc(_size_t, _size_t);
 
 #define CAPACITY 32
 void free(void* ptr);
@@ -214,6 +216,10 @@ public:
         return _capacity;
     }
 
+    uint64_t& _lvalcapacity() {
+        return _capacity;
+    }
+
     bool empty() const {
         return _size == 0;
     }
@@ -275,7 +281,7 @@ public:
 
     template<size_t N>
     managed<T>& operator+=(const T (&array)[N]) {
-        for (size_t i = 0; i < N; i++) {
+        for (size_t i = 0; i < N - nullend; i++) {
             push_back(array[i]);
         }
         return *this;
@@ -284,7 +290,7 @@ public:
     template<size_t N>
     managed<T> operator+(const T (&array)[N]) const {
         managed<T> res(*this);
-        for (size_t i = 0; i < N; i++) {
+        for (size_t i = 0; i < N - nullend; i++) {
             res.push_back(array[i]);
         }
         return res;

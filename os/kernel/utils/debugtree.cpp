@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../console.cpp"
+#include "../graphics/text/console.hpp"
 #include "../tree/tree.cpp"
 
 static void debugtree(uint64_t root_addr, int depth = 0) {

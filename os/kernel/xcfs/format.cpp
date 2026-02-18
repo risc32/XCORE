@@ -5,7 +5,6 @@
 #define PROC(total, lbl, code) {kout << endl << "   "; \
 Progress progress = {total, 30, lbl};code;progress.finish();own.increment();}
 
-
 void filesystem::format() {
     KernelOut kout = {};
     kout << MAGENTA << "   ";
@@ -32,7 +31,7 @@ void filesystem::format() {
 
 
     PROC(1, "Root making", {
-        if (!bst.initialize_filesystem(true)) panic("Error creating root directory");
+        //if (!bst.initialize_filesystem(true)) panic("Error creating root directory");
     });
 
     kout << endl;

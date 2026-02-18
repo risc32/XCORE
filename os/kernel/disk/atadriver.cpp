@@ -3,6 +3,7 @@
 #include "../types/types.cpp"
 #include "../cpu/cpu.cpp"
 #include "../memory/memory.cpp"
+#include "../managed/managed.cpp"
 
 struct DiskGeometry {
     uint64_t total_sectors;

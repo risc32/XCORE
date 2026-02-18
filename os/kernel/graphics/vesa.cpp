@@ -2,8 +2,14 @@
 
 #include "../types/types.cpp"
 #include "graphics.cpp"
-#include "../debug/inited.cpp"
+#include "../debug/debug.cpp"
 
+typedef enum {
+    COLOR_ORDER_UNKNOWN,
+    COLOR_ORDER_RGB,
+    COLOR_ORDER_BGR,
+    COLOR_ORDER_OTHER
+} ColorOrder;
 
 struct VBEInfo {
 
@@ -75,6 +81,49 @@ struct VBEInfo {
         return !isGraphicsMode();
     }
 
+    ColorOrder getColorOrder() const {
+
+        if (memoryModel != 0x06) {
+            return COLOR_ORDER_UNKNOWN;
+        }
+
+
+        uint8_t redPos, greenPos, bluePos;
+        uint8_t redSize, greenSize, blueSize;
+
+        if (hasLinearBuffer() && linRedMaskSize != 0) {
+
+            redPos = linRedFieldPosition;
+            greenPos = linGreenFieldPosition;
+            bluePos = linBlueFieldPosition;
+            redSize = linRedMaskSize;
+            greenSize = linGreenMaskSize;
+            blueSize = linBlueMaskSize;
+        } else {
+
+            redPos = redFieldPosition;
+            greenPos = greenFieldPosition;
+            bluePos = blueFieldPosition;
+            redSize = redMaskSize;
+            greenSize = greenMaskSize;
+            blueSize = blueMaskSize;
+        }
+
+
+        if (redSize == 0 || greenSize == 0 || blueSize == 0) {
+            return COLOR_ORDER_UNKNOWN;
+        }
+
+
+        if (redPos > greenPos && greenPos > bluePos) {
+            return COLOR_ORDER_RGB;
+        } else if (bluePos > greenPos && greenPos > redPos) {
+            return COLOR_ORDER_BGR;
+        } else {
+
+            return COLOR_ORDER_OTHER;
+        }
+    }
 
     uint16_t getPitch() const {
         if (hasLinearBuffer()) {
@@ -84,51 +133,6 @@ struct VBEInfo {
     }
 } __attribute__((packed));
 
-struct ModeInfoBlock {
-    uint16_t ModeAttributes;
-    uint8_t WinAAttributes;
-    uint8_t WinBAttributes;
-    uint16_t WinGranularity;
-    uint16_t WinSize;
-    uint16_t WinASegment;
-    uint16_t WinBSegment;
-    uint32_t WinFuncPtr;
-    uint16_t BytesPerScanLine;
-    uint16_t XResolution;
-    uint16_t YResolution;
-    uint8_t XCharSize;
-    uint8_t YCharSize;
-    uint8_t NumberOfPlanes;
-    uint8_t BitsPerPixel;
-    uint8_t NumberOfBanks;
-    uint8_t MemoryModel;
-    uint8_t BankSize;
-    uint8_t NumberOfImagePages;
-    uint8_t ReservedPage;
-    uint8_t RedMaskSize;
-    uint8_t RedFieldPosition;
-    uint8_t GreenMaskSize;
-    uint8_t GreenFieldPosition;
-    uint8_t BlueMaskSize;
-    uint8_t BlueFieldPosition;
-    uint8_t RsvdMaskSize;
-    uint8_t RsvdFieldPosition;
-    uint8_t DirectColorModeInfo;
-    uint32_t PhysBasePtr;
-    uint32_t OffScreenMemOffset;
-    uint16_t OffScreenMemSize;
-    uint8_t Reserved[206];
-} __attribute__((packed));
-
-void _mmzr_s0(void* dest, int size) {
-    auto wdptr = (uint64_t*)dest;
-    for (int i = 0; i < size/8; ++i) {
-        wdptr[i] = 0;
-        serial0() << "set " << hex << (int)&wdptr[i] << " to" << 0 << endl;
-
-    }
-
-}
 
 struct VESADriver {
     static VBEInfo fullinfo;
@@ -137,7 +141,7 @@ struct VESADriver {
         s0::put("void VESADriver::init() KERNEL 0x20000 .text\n");
 
         VBEInfo* vbe = (VBEInfo*)0x8400;
-        serial0() << "LPITCH: " << vbe->getPitch() << endl;
+        //serial0() << "LPITCH: " << vbe->getPitch() << endl;
 
         Screen::info.width = vbe->xResolution;
         Screen::info.height = vbe->yResolution;
@@ -155,13 +159,17 @@ struct VESADriver {
         //GraphicsInfo *gfx = (GraphicsInfo *) 0x7000
         Screen::size = Screen::info.height * Screen::info.pitch;
 
+        Screen::info.rgb = vbe->getColorOrder() == COLOR_ORDER_RGB;
+
         memcpy((void*)&Screen::buffer, (void*)&Screen::info, sizeof(Screen::buffer));
         //serial0() << hex << Screen::size << endl;
-        Screen::buffer.framebuffer = (uint64_t*)allocate(Screen::size);
+        Screen::buffer.framebuffer = (uint64_t*)malloc(Screen::size);
         //serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
         //serial0() << hex << (int)Screen::info.framebuffer << endl;
 
         fullinfo = *vbe;
+
+        Screen::init();
 
         return true;
     }

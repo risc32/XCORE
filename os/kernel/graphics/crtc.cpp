@@ -245,23 +245,23 @@ private:
 };
 
 VideoMode mode1024x768 = {
-        .width = 1024,
-        .height = 768,
-        .bpp = 32,
+    .width = 1024,
+    .height = 768,
+    .bpp = 32,
 
-        .h_total = 1344,
-        .h_display = 1024,
-        .h_sync_start = 1048,
-        .h_sync_end = 1184,
-        .h_blank_start = 1024,
-        .h_blank_end = 1344,
+    .h_total = 1344,
+    .h_display = 1024,
+    .h_sync_start = 1048,
+    .h_sync_end = 1184,
+    .h_blank_start = 1024,
+    .h_blank_end = 1344,
 
-        .v_total = 806,
-        .v_display = 768,
-        .v_sync_start = 771,
-        .v_sync_end = 777,
-        .v_blank_start = 768,
-        .v_blank_end = 806,
+    .v_total = 806,
+    .v_display = 768,
+    .v_sync_start = 771,
+    .v_sync_end = 777,
+    .v_blank_start = 768,
+    .v_blank_end = 806,
 
-        .pitch = 4096,
+    .pitch = 4096,
 };

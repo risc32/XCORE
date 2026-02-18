@@ -23,7 +23,7 @@ Main:
     mov gs, ax
     cld
 
-    call selectmode
+    call videomode
 
     ; Загружаем переходник в 64-битный режим
     mov ax, TRANSITION_ADDR shr 4    ; ES:BX = 0x07E0:0x0000
@@ -101,6 +101,7 @@ videomode:
     int 0x10
     cmp ax, 0x004F
     jne .eg
+
 
     ; Успех
     ret

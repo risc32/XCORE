@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../console.cpp"
+#include "../../graphics/text/console.hpp"
 #include "../cpu.cpp"
 #include "../../utils/basicmath.cpp"
 #include "../../memory/basic/memchr.cpp"
@@ -11,9 +11,9 @@ void find_ud2_in_memory(Console console) {
 
     for (uint32_t i = 0; i < kernel_size - 1; i++) {
         if (kernel_start[i] == 0x0F && kernel_start[i + 1] == 0x0B) {
-            console.write("Found UD2 at: ");
+            console.write("Found UD2 at: ", true);
             console.writeHex(0x10000 + i);
-            console.writeLine("");
+            console.writeLine("", true);
         }
     }
 }
@@ -46,9 +46,9 @@ static void page_fault_handler(registers_t *regs) {
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
     Console console;
-    console.write("Page Fault at ");
+    console.write("Page Fault at ", true);
     console.writeHex(faulting_address);
-    console.writeLine("");
+    console.writeLine("", true);
 
     while (1) asm volatile("hlt");
 }

@@ -17,7 +17,7 @@ typedef int32_t intptr_t;
 typedef uint32_t uintptr_t;
 
 #pragma pack(push, 1)
-struct _co_uint24_t {
+struct [[gnu::packed]] _co_uint24_t {
     uint8_t byte1;
     uint8_t byte2;
     uint8_t byte3;
@@ -29,7 +29,7 @@ _co_uint24_t uint24(uint32_t value) {
 }
 
 #define size_t _size_t
-typedef uint64_t _size_t;
+typedef decltype(sizeof(int)) size_t;
 
 typedef size_t uur;
 typedef int32_t ssize_t;

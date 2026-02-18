@@ -1,4 +1,4 @@
-@echo off
+@echo on
 
 fasm os/boot.asm build/boot.bin
 if errorlevel 1 exit /b 1

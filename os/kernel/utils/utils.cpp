@@ -4,15 +4,16 @@
 #include "../types/types.cpp"
 
 
-#ifndef stage2
 #include "atoi.cpp"
+#ifndef stage2
+
 #include "strings.cpp"
 #include "basicmath.cpp"
 #include "bitwise.cpp"
 #include "division64.cpp"
 #endif
 
-#define INTEL(x) asm volatile ("\n.intel_syntax noprefix");asm volatile (x); asm volatile(".att_syntax prefix")
+#define INTEL(...) asm volatile ("\n.intel_syntax noprefix");asm volatile (__VA_ARGS__ ); asm volatile(".att_syntax prefix")
 
 #define IRR(cmd, src, dest) \
     INTEL(#cmd " " #src ", " #dest)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../types/types.cpp"
-#include "../console.cpp"
+#include "../graphics/text/console.hpp"
 #include "../memory/memory.cpp"
 
 #define TRACE __PRETTY_FUNCTION__
@@ -44,22 +44,22 @@ public:
     }
 
     static void dump_trace(Console &console, bool skip = false) {
-        console.writeLine("\nFunctions stack trace:");
+        console.writeLine("\nFunctions stack trace:", true);
         int skipcount = 4;
         for (int i = 0; i < trace_count; i++) {
             if (skip && i < skipcount) continue;
             for (int j = 0; j < traces[i].stack_depth; j++)
-                console.write("  ");
+                console.write("  ", true);
 
-            console.write("[");
-            console.write(traces[i].stack_depth);
-            console.write("] ");
-            console.write(traces[i].func_name);
-            console.write(" @ ");
+            console.write("[", true);
+            console.write((int)traces[i].stack_depth);
+            console.write("] ", true);
+            console.write(traces[i].func_name, true);
+            console.write(" @ ", true);
             console.writeHex(traces[i].entry_addr);
-            console.write(" T+");
-            console.write(traces[i].call_time);
-            console.writeLine("");
+            console.write(" T+", true);
+            console.write((int)traces[i].call_time);
+            console.writeLine("", true);
         }
     }
 

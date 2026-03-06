@@ -8,6 +8,7 @@
 
 void _idraw_char(unsigned char c, int x, int y, const GraphicsInfo& info, const Font& font, int fg, int bg) {
     RasterBitmap bmp{};
+    if (x + font.size_x >= info.width || y + font.size_y >= info.height) return;
 
     bmp.bitmap = font.getchar(c);
     bmp.size_x = font.size_x;

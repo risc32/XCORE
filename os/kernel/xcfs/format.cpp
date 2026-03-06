@@ -7,7 +7,8 @@ Progress progress = {total, 30, lbl};code;progress.finish();own.increment();}
 
 void filesystem::format() {
     KernelOut kout = {};
-    kout << MAGENTA << "   ";
+    kout << MAGENTA << "    ";
+
     Progress own(6, 30, "Formatting");
     PROC(1, "Preparation of structures", {
         dispatcher::superblock = dispatcher::crblock();
@@ -29,10 +30,12 @@ void filesystem::format() {
     dispatcher::initsb();
     dispatcher::initbitmap();
 
-
+#ifndef noallocdir
     PROC(1, "Root making", {
+        filesystem::root = Directory::allocdir();
         //if (!bst.initialize_filesystem(true)) panic("Error creating root directory");
     });
+#endif
 
     kout << endl;
     kout << LIGHT_GREEN << "   Formatting complete" << endl;

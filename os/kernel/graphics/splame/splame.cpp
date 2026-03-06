@@ -8,7 +8,7 @@
 #define splcacheKB 16
 #define splcache (splcacheKB*1024)
 
-/
+
 #define splccblocks (splcache / splpixels)
 
 struct HeatUnit;

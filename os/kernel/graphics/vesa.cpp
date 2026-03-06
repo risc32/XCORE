@@ -143,6 +143,7 @@ struct VESADriver {
         VBEInfo* vbe = (VBEInfo*)0x8400;
         //serial0() << "LPITCH: " << vbe->getPitch() << endl;
 
+        Screen::info = {};
         Screen::info.width = vbe->xResolution;
         Screen::info.height = vbe->yResolution;
         Screen::info.bpp = vbe->bitsPerPixel;

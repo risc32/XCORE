@@ -187,7 +187,11 @@ public:
 
     void read(uint64_t lba, uint32_t count, char* buffer) const {
         wait_bsy();
-
+#ifndef stage2
+        if (lba > geometry.total_sectors) {
+            panic("Access to a non-existent disk sector");
+        }
+#endif
         outb(base_port + ATA_SECTOR_COUNT, count & 0xFF);
         outb(base_port + ATA_LBA_LOW, lba & 0xFF);
         outb(base_port + ATA_LBA_MID, (lba >> 8) & 0xFF);
@@ -214,13 +218,11 @@ public:
         const char* buffer = data;
 
         wait_bsy();
-
         outb(base_port + ATA_SECTOR_COUNT, count & 0xFF);
         outb(base_port + ATA_LBA_LOW, lba & 0xFF);
         outb(base_port + ATA_LBA_MID, (lba >> 8) & 0xFF);
         outb(base_port + ATA_LBA_HIGH, (lba >> 16) & 0xFF);
         outb(base_port + ATA_DRIVE_HEAD, 0xE0 | ((lba >> 24) & 0x0F));
-
         outb(base_port + ATA_COMMAND, 0x30);
 
         for (uint32_t sector = 0; sector < count; sector++) {

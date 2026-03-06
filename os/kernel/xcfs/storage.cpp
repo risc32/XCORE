@@ -8,6 +8,7 @@
 
 #define VERSION 1
 #define BLOCK_SIZE 512
+#define FRAGCOUNT 26
 
 struct __attribute__((packed)) node {
     uint64_t parent;
@@ -48,6 +49,10 @@ union super_block {
         uint64_t last_mount;
         uint64_t last_write;
     };
+
+    super_block() {
+        memset(data, 0, sizeof(data));
+    };
 };
 
 #ifndef stage2
@@ -70,37 +75,34 @@ union inode {
         node nd;
 
         uint64_t index;
-        indirect fragments[20];
+        indirect fragments[FRAGCOUNT];
 
         inode_type type;
         uint16_t permissions;
 
         uint64_t created;
         uint64_t modified;
-        uint16_t bytes;
+        uint64_t size;
 
         uint64_t link_count;
         uint64_t uid;
         uint64_t gid;
-
-        char name[80];
     };
 
+    void write() {
+
+    }
+
     uint64_t getsize() const {
-        for (int i = 19; i >= 0; --i) {
-            if (fragments[i].blocks != 0) {
-                return fragments[i].blocks * 512 + (bytes % 512);
-            }
-        }
-        return 0;
+        return size;
     }
 
     bool valid() {
         return type != it_none;
     }
 
-    inode (const string& filename, inode_type type = it_file,
-           uint64_t permissions = 0644, uint64_t parent = 0): name{0} {
+    inode (inode_type type,
+           uint64_t permissions = 0644, uint64_t parent = 0) {
 
 
         this->type = type;
@@ -110,12 +112,12 @@ union inode {
         gid = 0;
 
 
-        memcpy(name, filename.data(), (filename).size());
+        //memcpy(name, filename.data(), (filename).size());
         //name[sizeof(name) - 1] = '\0';
 
         created = 0;
         modified = 0;
-        bytes = 0;
+        size = 0;
 
         nd.parent = parent;
         nd.a = 0;
@@ -130,6 +132,15 @@ union inode {
 
     inode() {
 
+    }
+};
+
+struct linkednode {
+    inode ind;
+    uint64_t sector;
+
+    void save() {
+        disk::write(sector, ind.data);
     }
 };
 

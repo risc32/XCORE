@@ -14,29 +14,29 @@ int ram(const managed<string>& args) {
     string com = args[0];
 
     if (com == "info") {
-        auto blocks = getblocks();
-
-        uint32_t usize = 0;
-        for (memory_block* block : blocks) {
-            usize += block->size * block->used;
-        }
-        kout << hex << "HEAP SIZE: " << HEAP_SIZE << endl;
-        kout << hex << "HEAP ADDRESS: " << (int)memory::heap << endl;
-
-        kout << "USED SPACE: " << usize << endl;
-        kout << "FREE SPACE: " << HEAP_SIZE-usize << endl;
-        kout << "COUNT OF BLOCKS: " << dec << blocks.size() << endl;
-        kout << "TOTAL WAS ALLOCATED: " << memory::mbids << endl;
+        // auto blocks = getblocks();
+        //
+        // uint32_t usize = 0;
+        // for (memory_block* block : blocks) {
+        //     usize += block->size * block->used;
+        // }
+        // kout << hex << "HEAP SIZE: " << HEAP_SIZE << endl;
+        // kout << hex << "HEAP ADDRESS: " << (int)memory::heap << endl;
+        //
+        // kout << "USED SPACE: " << usize << endl;
+        // kout << "FREE SPACE: " << HEAP_SIZE-usize << endl;
+        // kout << "COUNT OF BLOCKS: " << dec << blocks.size() << endl;
+        // kout << "TOTAL WAS ALLOCATED: " << memory::mbids << endl;
 
     } else if (com == "showfree") {
-        auto blocks = getblocks();
-
-        kout << "FREE MEMORY BLOCKS: " << endl << setw(10);
-        blocktable(kout);
-
-        for (memory_block* block : blocks) {
-            if(!block->used) blockinfo(kout, block);
-        }
+        // auto blocks = getblocks();
+        //
+        // kout << "FREE MEMORY BLOCKS: " << endl << setw(10);
+        // blocktable(kout);
+        //
+        // for (memory_block* block : blocks) {
+        //     if(!block->used) blockinfo(kout, block);
+        // }
     } else if (com == "get") {
         CHECK(2)
 

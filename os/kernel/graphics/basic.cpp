@@ -95,13 +95,13 @@ inline void _imemset_spec32(uint32_t* dest, uint32_t color, uint32_t count) {
     }
 }
 
-/
+
 inline void _iputf_line24(uint32_t x, uint32_t y, _co_uint24_t col, uint32_t length, const GraphicsInfo& target_info) {
     _imemset_spec24(_iget_addr24(x, y, target_info), col, length);
     _splm_effective(_iget_offset24(x, y, target_info), length);
 }
 
-/
+
 inline void _iputf_line32(uint32_t x, uint32_t y, uint32_t col, uint32_t length, const GraphicsInfo& target_info) {
     _imemset_spec32(_iget_addr32(x, y, target_info), col, length);
     _splm_effective(_iget_offset32(x, y, target_info), length);

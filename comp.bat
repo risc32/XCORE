@@ -9,25 +9,28 @@ if errorlevel 1 exit /b 1
 fasm os/kernel/cmd/reboot.asm build/reboot.bin
 if errorlevel 1 exit /b 1
 
-gcc os/kernel/kernel.cpp -w -o prep/prep.ii -E -DPREP -fpermissive
-gcc os/kernel/kernel.cpp -w -o prep/prep.asm -S -DPREP -fpermissive
+gcc os/kernel/kernel.cpp -w -o prep/prep.ii -E -DPREP -fpermissive -Iinclude
+gcc os/kernel/kernel.cpp -w -o prep/prep.asm -S -DPREP -fpermissive -Iinclude
 if errorlevel 1 exit /b 1
 
-gcc os/kernel/kernel.cpp -w -D stage2 -o prep/midprep.ii -E -DPREP -fpermissive
-gcc os/kernel/kernel.cpp -w -D stage2 -o prep/midprep.asm -S -DPREP -fpermissive
+gcc os/kernel/kernel.cpp -w -D stage2 -o prep/midprep.ii -E -DPREP -fpermissive -Iinclude
+gcc os/kernel/kernel.cpp -w -D stage2 -o prep/midprep.asm -S -DPREP -fpermissive -Iinclude
 if errorlevel 1 exit /b 1
 
 REM 64-bit компиляция
-x86_64-elf-g++ -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive -fno-use-cxa-atexit -O0 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie
+x86_64-elf-g++ -g -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive -fno-use-cxa-atexit -O0 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -Iinclude
 if errorlevel 1 exit /b 1
 
-x86_64-elf-g++ -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/middle.o -fpermissive -fno-use-cxa-atexit -O0 -D stage2 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie
+x86_64-elf-g++ -g -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/middle.o -fpermissive -fno-use-cxa-atexit -O0 -D stage2 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -Iinclude
 if errorlevel 1 exit /b 1
 
-x86_64-elf-ld -w -m elf_x86_64 -Ttext 0x200000 -o build/kernel.bin --oformat binary build/kernel.o
+x86_64-elf-ld -g -w -m elf_x86_64 -Ttext 0x200000 -o build/kernel.bin --oformat binary build/kernel.o
 if errorlevel 1 exit /b 1
 
-x86_64-elf-ld -w -m elf_x86_64 -Ttext 0x15000 -o build/middle.bin --oformat binary build/middle.o
+x86_64-elf-ld -g -w -m elf_x86_64 -Ttext 0x15000 -o build/middle.bin --oformat binary build/middle.o
+if errorlevel 1 exit /b 1
+
+x86_64-elf-ld -g -w -m elf_x86_64 -Ttext 0x200000 -o build/kernel.elf build/kernel.o
 if errorlevel 1 exit /b 1
 
 del os.img
@@ -50,4 +53,7 @@ if errorlevel 1 exit /b 1
 dd if=build/reboot.bin of=os.img bs=512 seek=1024 conv=notrunc
 if errorlevel 1 exit /b 1
 
-cmd /k run.bat
+if "%*"=="" (
+    cmd /k run.bat
+)
+exit 0

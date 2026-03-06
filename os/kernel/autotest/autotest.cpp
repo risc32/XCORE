@@ -29,7 +29,7 @@ void check(TestResult *resbuf, unsigned short *cbuf, Console console, int count)
 }
 
 void autotest() {  ///for stacktrace
-
+    setcatch({false});
     unsigned short cbuf[4000] = {};
     Console console = Console();
     //console.set_color(LI, MAGENTA);
@@ -47,5 +47,5 @@ void autotest() {  ///for stacktrace
     check(resbuf, cbuf, console, mngtest(resbuf));
     s0::put("DIA.Vmng KERNEL 0x20000 .text\n");
 
-
+    delcatch();
 }

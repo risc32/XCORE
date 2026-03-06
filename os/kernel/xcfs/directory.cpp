@@ -9,7 +9,7 @@
 #include "../crypto/crypto.cpp"
 
 #define ENAMESZ 232
-#define EDSCOUNT 16
+#define ENTSIZE sizeof(DirectoryEntry)
 
 #define CHECK(path) {if (!check(path)) panic("Invalid name");}
 #define CHECKF(path) {if (!fcheck(path)) panic("Invalid path");}
@@ -20,60 +20,114 @@ struct DirectoryEntry {
     char name[ENAMESZ];
 
     bool compare(const string& other) const {
-        return memcmp(name, other.data(), ENAMESZ) == 0;
+        return strcmp(name, other.data()) == 0;
     }
 };
 
-struct DirectoryStorage {
-    DirectoryEntry entries[EDSCOUNT];
-};
-
-struct result;
-
 struct Directory {
-    inode dir;
+    linkednode linked;
 
-    static Directory create(const string& path) {
-        CHECKF(path)
-        inode i = filesystem::getdir(path).dir;
-        if (i.type != it_none) panic("A file or directory with that name already exists");
-        __annotation()
-        memcpy(i.fragments, fragment::hardwarealloc(1).data(), sizeof i.fragments);
+    result getres() {
+        return {
+            linked.ind,
+            linked.sector
+        };
+    }
+
+    static Directory allocdir() {
+        result i = dispatcher::add_result({
+                it_dir
+            });
+        auto allocated = fragment::hardwarealloc(1);
+        //if (i.ind.type != it_none) panic("A file or directory with that name already exists");
+        memcpy(i.ind.fragments, allocated.data(), sizeof i.ind.fragments);
+        i.ind.type = it_dir;
+
+        disk::write(i.sector, i.ind.data);
 
         //filesystem::bst.insert(ind);
         return Directory(i);
     }
 
-    Directory(inode _dir) : dir(_dir) {
-        if (dir.type != it_dir) panic("The specified directory does not exist");
+    static Directory create(const string& path) {
+
+        Directory d = allocdir();
+
+        Path p = path;
+        Directory parent = Directory{filesystem::getdir(p.parents)};
+        parent.add_entry(p.endname, d.linked.sector);
+
+        return d;
     }
 
-    Directory(const string& path) {
+    explicit Directory(result result) : linked{result.ind, result.sector} {
+        if (linked.ind.type != it_dir)
+            panic("The specified directory does not exist");
+    }
+
+    explicit Directory(const string& path) {
+        if (path.empty()) {
+            linked.ind.type = it_none;
+            linked.sector = 0;
+            return;
+        }
         CHECKF(path)
 
-        dir = filesystem::getdir(path).dir;
-        if (dir.type != it_dir) panic("The specified directory does not exist");
+        auto re = filesystem::getdir(path);
+        linked.ind = re.ind;
+        linked.sector = re.sector;
+        if (linked.ind.type != it_dir)
+            panic(("The specified directory \""_s + path + "\" does not exist"_s).c_str());
     }
 
-    DirectoryStorage get_storage(uint64_t pos) {
-        return *(DirectoryStorage*)fragment::read(dir.fragments, pos * sizeof(DirectoryStorage), sizeof(DirectoryStorage)).data();
+    DirectoryEntry get_entry(uint64_t pos) {
+        //return *(DirectoryEntry*)fragment::read(dir.fragments, pos * sizeof(DirectoryEntry), sizeof(DirectoryEntry)).data();
+        // Шаг 1: Вычисляем смещение (позицию в байтах)
+        size_t offset = pos * sizeof(DirectoryEntry);
+
+        // Шаг 2: Читаем данные из фрагментов по этому смещению
+        // Предполагаем, что read() возвращает какой-то объект (например, vector<char> или свою структуру)
+        auto read_result = fragment::read(linked.ind.fragments, offset, sizeof(DirectoryEntry));
+
+        // Шаг 3: Получаем указатель на сырые данные
+        const void* raw_data_ptr = read_result.data();
+
+        // Шаг 4: Преобразуем void-указатель в указатель на DirectoryEntry
+        const DirectoryEntry* entry_ptr = static_cast<const DirectoryEntry*>(raw_data_ptr);
+        // Или если используется C-style cast как в оригинале:
+        // const DirectoryEntry* entry_ptr = (DirectoryEntry*)raw_data_ptr;
+
+        // Шаг 5: Разыменовываем указатель, чтобы получить саму структуру
+        DirectoryEntry entry = *entry_ptr;
+
+        // Шаг 6: Возвращаем результат
+        return entry;
     }
 
-    void set_storage(uint64_t pos, DirectoryStorage data) {
-        fragment::write(dir.fragments, pos * sizeof(DirectoryStorage), bytestream(data));
+    void set_entry(uint64_t pos, DirectoryEntry data) {
+        fragment::write(linked.ind.fragments, pos * sizeof(DirectoryEntry), bytestream(data), linked);
     }
 
-    DirectoryEntry* find_entry(const string& entry) {
-        if (entry.size() > ENAMESZ) return nullptr;
+    DirectoryEntry find_entry(const string& entry) {
+        if (entry.size() > ENAMESZ) return {};
         __int128 entryhash = hash::_highprec1(entry.c_str());
         int pos = 0;
-        while (true) {
-            for (auto& i : get_storage(pos++).entries) {
-                if (i.hash == entryhash and i.compare(entry)) return &i;
+        //serial0() << "find entry: " << dir.getsize() << " : " << entry << endl;
+
+        while (pos < linked.ind.getsize() / sizeof(DirectoryEntry)) {
+            //stop();
+            auto i = get_entry(pos++);
+
+            if (i.hash == entryhash and i.compare(entry)) {
+
+                return i;
             }
-            if (pos >= dir.getsize() / EDSCOUNT) break;
+
+
+            //if (pos >= dir.getsize() / sizeof(DirectoryStorage)) break;
         }
-        return nullptr;
+
+        return {};
     }
 
     result find(const string& entry);
@@ -82,16 +136,15 @@ struct Directory {
         managed<string> res;
         int pos = 0;
         while (true) {
-            for (auto& i : get_storage(pos++).entries) {
-                res.push_back(i.name);
-            }
-            if (pos >= dir.getsize() / EDSCOUNT) break;
+            res.push_back(get_entry(pos++).name);
+
+            if (pos >= linked.ind.getsize() / ENTSIZE) break;
         }
         return res;
     }
 
     bool has_entry(const string& entry) {
-        return find_entry(entry) != nullptr;
+        return find_entry(entry).ind;
     }
 
     static bool check(const string& entry) {
@@ -119,34 +172,40 @@ struct Directory {
         return true;
     }
 
-
-    void add_entry(const string& entry) {
+    void add_entry(const string& entry, uint64_t ind) {
         CHECK(entry)
+
         if (!has_entry(entry)) {
-            DirectoryEntry ent{hash::_highprec1(entry.c_str())};
-            memcpy(ent.name, entry.data(), entry.size());
-            fragment::write(dir.fragments, -1, bytestream(ent));
+            // 1. Инициализируем структуру нулями полностью!
+            DirectoryEntry ent{};
+            ent.hash = hash::_highprec1(entry.c_str());
+            ent.ind = ind;
+
+            // 2. Безопасное копирование с учетом места под нуль-терминатор
+            size_t copy_len = (entry.size() < ENAMESZ - 1) ? entry.size() : ENAMESZ - 1;
+            memcpy(ent.name, entry.data(), copy_len);
+            ent.name[copy_len] = '\0'; // Гарантируем конец строки для strcmp
+
+            fragment::write(linked.ind.fragments, -1, bytestream(ent), linked);
+        } else {
+            panic("Directory or file already exists");
         }
     }
-};
-
-struct result {
-    inode ind;
-    uint64_t sector;
 };
 
 result none = {};
 
 result Directory::find(const string& entry) {
-    DirectoryEntry* found = find_entry(entry);
-    if (found == nullptr) {
+    DirectoryEntry found = find_entry(entry);
+
+    if (!found.ind) {
         return none;
     }
     inode ind;
-    disk::read(found->ind, 1, ind.data);
+    disk::read(found.ind, 1, ind.data);
 
     return {
         ind,
-        found->ind
+        found.ind
     };
 }

@@ -25,3 +25,21 @@ int cmdsr(const managed<string>& args) {
 
     return 0;
 }
+
+int mmstress(argt args) {
+    CHECK(1)
+    int c = to_int(args[0]);
+    void** ptrs = (void**)calloc(64, sizeof(void*));
+
+    for (int j = 1; j < c; ++j) {
+        for (int i = 1; i < 64+1; ++i) {
+            ptrs[i-1] = allocate(i * 8);
+        }
+        for (int i = 0; i < 64; ++i) {
+            free(ptrs[i]);
+        }
+    }
+
+    free(ptrs);
+    return 0;
+}

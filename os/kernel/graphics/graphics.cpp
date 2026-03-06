@@ -78,16 +78,19 @@ struct Screen {
     }
 
     static void draw(uint32_t x, uint32_t y, uint32_t color) {
+        if (x >= info.width || y >= info.height) return;
         if (info.bpp == 24) _iput_pixel24(x, y, uint24(color), buffer);
         else if (info.bpp == 32) _iput_pixel32(x, y, color, buffer);
     }
 
     static void draw24(uint32_t x, uint32_t y, _co_uint24_t color) {
+        if (x >= info.width || y >= info.height) return;
         color = getcol(color, buffer);
         _iput_pixel24(x, y, color, buffer);
     }
 
     static void draw32(uint32_t x, uint32_t y, uint32_t color) {
+        if (x >= info.width || y >= info.height) return;
         color = getcol(color, buffer);
         _iput_pixel32(x, y, color, buffer);
     }
@@ -164,14 +167,17 @@ struct Screen {
     }
 
     static void draw_char(uint32_t x, uint32_t y, unsigned char c) {
+        if (x >= info.width || y >= info.height) return;
         _idraw_char(c, x, y, buffer, console.font, fg, bg);
     }
 
     static void draw_string(uint32_t x, uint32_t y, string str) {
+        if (x >= info.width || y >= info.height) return;
         _idraw_string(str.c_str(), x, y, buffer, console.font, fg, bg);
     }
 
     static void out(unsigned char c, bool both = false) {
+
         if (c == '\n') {
             cursor_y += console.font.size_y;
             cursor_x = 0;

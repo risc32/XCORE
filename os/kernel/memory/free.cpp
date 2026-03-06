@@ -5,12 +5,12 @@
 void free(void *ptr) {
     if (!ptr) return;
 
-
     if (ptr < (void*)memory::heap || ptr >= (void*)(memory::heap + sizeof(memory::heap))) {
         return;
     }
 
     auto *block = (memory_block *)((char *)ptr - sizeof(memory_block));
+    memzero(block->getdata(), block->size);
 
 
     if (block->mbid < 0 || block->mbid >= memory::mbids) {

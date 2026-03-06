@@ -32,3 +32,12 @@
     uint8_t name##_placeholder[size] __attribute__((unused))
 
 RESERVE_MEMORY(vga, 0xB8000, 80*25*2);
+
+template<typename T>
+constexpr T align_up(T value, T alignment) {
+    return (value + alignment - 1) & ~(alignment - 1);
+}
+
+constexpr uint64_t align_up(uint64_t value, uint64_t alignment) {
+    return (value + alignment - 1) & ~(alignment - 1);
+}

@@ -25,6 +25,16 @@ void strcpy(char *dest, const char *src) {
     dest[i] = '\0';
 }
 
+int strcmp(const char *s1, const char *s2) {
+    size_t i = 0;
+    while (s1[i] + s2[i] != '\0') {
+        if (s1[i] != s2[i]) {
+            return s1[i] - s2[i];
+        }
+    }
+    return 0;
+}
+
 int count_digits(int num, int base = 10) {
     if (num == 0) return 1;
 

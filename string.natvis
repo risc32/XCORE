@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="string">
+        <!-- Основное отображение: строка и размер -->
+        <DisplayString>{{ _data,[_size] }} [size={_size}, cap={_capacity}, nullend={nullend}]</DisplayString>
+
+        <!-- Развернутое представление -->
+        <Expand>
+            <Item Name="[value]">_data,[_size]</Item>
+            <Item Name="[size]">_size</Item>
+            <Item Name="[capacity]">_capacity</Item>
+            <Item Name="[null-terminated]">nullend</Item>
+            <Item Name="[raw data]">_data,[_capacity]</Item>
+        </Expand>
+    </Type>
+</AutoVisualizer>

@@ -2,7 +2,24 @@
 
 #include "../disk/disk.cpp"
 #include "storage.cpp"
-#include "../stream/stream.cpp"
+#include "../utils/inited.cpp"
+
+struct result {
+    inode ind;
+    uint64_t sector;
+};
+
+struct Path {
+    managed<string> parents;
+    string endname;
+
+    Path(string path) {
+        auto s = split(path, '/');
+        endname = s.back();
+        s.pop_back();
+        parents = s;
+    }
+};
 
 struct dispatcher {
     static super_block superblock;
@@ -24,6 +41,10 @@ struct dispatcher {
     }
 
     static void initbitmap() {
+        csector = superblock.bitmap;
+        changed = false;
+        disk::read(csector, 1, cbitmap.data);
+        
         char bp[512] = {};
         for (int i = 0; i < superblock.bsize; i++) {
             disk::write(superblock.bitmap + i, bp);
@@ -31,10 +52,9 @@ struct dispatcher {
         for (int i = 0; i < superblock.bsize + 2; i++) {
             set(i, true);
         }
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < 1024; i++) {
             set(i + KERNEL, true);
         }
-        setcache(superblock.bitmap);
     }
 
     static uint64_t secpos(uint64_t lba) {
@@ -107,6 +127,7 @@ struct dispatcher {
     }
 
     static indirect getblock(uint64_t size) {
+        //serial0() << size << " ";
         int fco = 0;
         uint64_t start = 0;
 
@@ -145,15 +166,30 @@ struct dispatcher {
 
     static super_block crblock() {
         uint64_t bms = ((disk::driver.geometry.total_sectors + 7) / 8 + 511) / 512;
-        return {
-                .magic = "XCFS",
-                .version = VERSION,
-                .kerneladdr = 39,
-                .block_size = BLOCK_SIZE,
-                .total_blocks = disk::driver.geometry.total_sectors,
-                .bitmap = 2,
-                .bsize = bms,
-        };
+        super_block sp = {};
+        memcpy(sp.magic, "XCFS", 5);
+        sp.version = VERSION;
+        sp.kerneladdr = 39;
+        sp.block_size = BLOCK_SIZE;
+        sp.total_blocks = disk::driver.geometry.total_sectors;
+        sp.bitmap = 2;
+        sp.bsize = bms;
+        return sp;
+    }
+
+    static uint64_t add(inode v) {
+        uint64_t addr = getfree();
+
+        if (v.nd.depth == 0) {
+            v.nd.depth = 1;
+        }
+        v.index = addr;
+        disk::write(addr, v.data);
+        return addr;
+    }
+
+    static result add_result(inode v) {
+        return {v, add(v)};
     }
 };
 

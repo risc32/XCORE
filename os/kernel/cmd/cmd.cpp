@@ -26,17 +26,13 @@ void* parseaddr(string s) {
     gettype type;
     memory_block* block = nullptr;
     switch (s[0]) {
-        case '@':
-            type = gettype::addr;
-            block = (memory_block*)to_int(s, 16);
-            break;
         case 'x':
             type = gettype::offset;
             block = (memory_block*)(((uint32_t)memory::heap) + (uint32_t)to_int(s, 16));
             break;
         default:
-            type = gettype::id;
-            block = getbyid(to_int(s));
+            type = gettype::addr;
+            block = (memory_block*)to_int(s, 16);
             break;
     }
     return block;
@@ -104,6 +100,7 @@ struct cmd {
         add_command("ram", ram);
         add_command("disk", disk);
         add_command("serial0", cmdsr);
+        add_command("mmstress", mmstress);
     }
 
     static void add_command(const string& name, int (*func)(argt)) {

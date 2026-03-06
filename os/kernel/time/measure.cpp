@@ -52,7 +52,6 @@ public:
         running = false;
     }
 
-
     void reset() {
         start_ticks = 0;
         end_ticks = 0;

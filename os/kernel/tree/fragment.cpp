@@ -2,9 +2,10 @@
 
 #include "../xcfs/storage.cpp"
 #include "../xcfs/bitmap.cpp"
+#include "../debug/inited.cpp"
 
 struct fragment {
-    static managed<indirect> to_managed(indirect* frag) {
+    static managed<indirect> to_managed(indirect *frag) {
         managed<indirect> a = {};
         for (int i = 0; frag[i].blocks; i++) {
             a.push_back(frag[i]);
@@ -12,193 +13,249 @@ struct fragment {
         return a;
     }
 
-    static void write(indirect* frag, uint64_t seek, const managed<char>& data) {
-        write(to_managed(frag), seek, data);
+    static void write(indirect *frag, uint64_t seek, const managed<char> &data, linkednode linked) {
+        write(to_managed(frag), seek, data, linked);
     }
 
+    static void write(managed<indirect> frag, int64_t seek, const managed<char> &data, linkednode linked) {
+        if (data.size() == 0) return;
 
-    static void write(managed<indirect> frag, uint64_t seek, const managed<char>& data) {
-        const char* d = data.data();
-        uint64_t remaining = data.size();
+        // Обработка seek = -1 (запись в конец)
+        if (seek == -1) {
+            seek = getsize(frag);
+        }
+
+        // Проверка на отрицательный seek после преобразования
+        if (seek < 0) {
+            panic("Negative seek position after -1 expansion");
+        }
+
+        const char *d = data.data();
+        uint64_t bytes_remaining = data.size();
+        uint64_t data_pos = 0;
         uint64_t current_seek = seek;
 
+        for (auto &indir: frag) {
+            uint64_t block_size = indir.blocks * 512;
 
-        uint64_t total_size = getsize(frag);
-        if (seek == -1) {
-            current_seek = total_size;
-        }
-        if (current_seek + remaining > total_size) {
-            uint64_t needed = (current_seek + remaining) - total_size;
-            frag += hardwarealloc(needed);
-        }
-
-
-        for (indirect& ind : frag) {
-            uint64_t block_size = ind.blocks * 512;
-
+            // Пропускаем фрагменты до нужной позиции
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
+            // Вычисляем позицию внутри текущего фрагмента
+            uint64_t block_offset = current_seek % 512;
+            uint64_t start_block = current_seek / 512;
+            uint64_t bytes_available = block_size - current_seek;
 
-            uint64_t start = current_seek / 512;
-            uint64_t offset = current_seek % 512;
-            uint64_t count = ind.blocks - start;
-            uint64_t available = count * 512 - offset;
+            // Сколько байт можем записать в этот фрагмент
+            uint64_t bytes_to_write = min(bytes_remaining, bytes_available);
 
-            if (remaining <= available) {
+            if (bytes_to_write > 0) {
+                // Записываем с учётом смещения внутри фрагмента
+                if (block_offset == 0 && bytes_to_write % 512 == 0) {
+                    // Идеальный случай - запись целыми секторами без смещения
+                    disk::write(indir.start + start_block, bytes_to_write / 512, d + data_pos);
+                } else {
+                    // Сложный случай - есть смещение или неполные сектора
+                    uint64_t written = 0;
 
-                uint64_t blocks_needed = (remaining + offset + 511) / 512;
-                disk::write(ind.start + start, blocks_needed, d);
-                return;
-            } else {
+                    // Обработка первого (возможно неполного) сектора
+                    if (block_offset > 0) {
+                        char sector_buffer[512];
+                        disk::read(indir.start + start_block, 1, sector_buffer);
 
-                if (offset > 0) {
+                        uint64_t chunk = min(512 - block_offset, bytes_to_write);
+                        memcpy(sector_buffer + block_offset, d + data_pos, chunk);
+                        disk::write(indir.start + start_block, sector_buffer);
 
-                    managed<char> temp(512);
-                    disk::read(ind.start + start, 1, temp.data());
-                    memcpy(temp.data() + offset, d, 512 - offset);
-                    disk::write(ind.start + start, temp.data());
-                    d += 512 - offset;
-                    remaining -= 512 - offset;
-                    start++;
-                }
+                        written += chunk;
+                        start_block++;
+                    }
 
+                    // Запись полных секторов
+                    while (bytes_to_write - written >= 512) {
+                        disk::write(indir.start + start_block,
+                                    d + data_pos + written);
+                        written += 512;
+                        start_block++;
+                    }
 
-                if (start < ind.blocks) {
-                    uint64_t full_blocks = min(remaining / 512, ind.blocks - start);
-                    if (full_blocks > 0) {
-                        disk::write(ind.start + start, full_blocks, d);
-                        d += full_blocks * 512;
-                        remaining -= full_blocks * 512;
+                    // Обработка последнего неполного сектора
+                    if (bytes_to_write - written > 0) {
+                        char sector_buffer[512];
+                        disk::read(indir.start + start_block, 1, sector_buffer);
+
+                        uint64_t chunk = bytes_to_write - written;
+                        memcpy(sector_buffer, d + data_pos + written, chunk);
+                        disk::write(indir.start + start_block, sector_buffer);
                     }
                 }
-                current_seek = 0;
+
+                data_pos += bytes_to_write;
+                bytes_remaining -= bytes_to_write;
+                current_seek = 0; // В следующих фрагментах смещение уже не нужно
             }
+
+            if (bytes_remaining == 0) break;
         }
     }
 
-    static managed<char> read(indirect* frag, uint64_t seek, uint64_t size) {
+    static managed<char> read(indirect *frag, uint64_t seek, uint64_t size) {
         return read(to_managed(frag), seek, size);
     }
 
-    static managed<char> read(managed<indirect> frag, uint64_t seek, uint64_t size) {
-        managed<char> res(size);
-        char* buffer = res.data();
-        uint64_t remaining = size;
-        uint64_t current_seek = seek;
-        uint64_t buffer_offset = 0;
-
+    static managed<char> read(managed<indirect> frag, int64_t seek, uint64_t size) {
+        if (size == 0) return managed<char>();
 
         uint64_t total_size = getsize(frag);
-        if (seek + size > total_size) {
-            size = total_size - seek;
-            remaining = size;
-            res.setsize(size);
+
+        // Обработка seek = -1 (чтение с конца)
+        if (seek == -1) {
+            if (size > total_size) {
+                seek = 0; // Если запрашиваем больше чем есть, читаем с начала
+            } else {
+                seek = total_size - size; // Читаем последние 'size' байт
+            }
         }
 
+        // Проверка границ
+        if (seek < 0 || static_cast<uint64_t>(seek) >= total_size) {
+            return managed<char>(); // Некорректная позиция
+        }
 
-        for (indirect& ind : frag) {
+        uint64_t u_seek = static_cast<uint64_t>(seek);
+
+        // Корректируем размер, если выходим за пределы
+        if (u_seek + size > total_size) {
+            size = total_size - u_seek;
+        }
+
+        managed<char> res(size);
+        char *buffer = res.data();
+        uint64_t bytes_remaining = size;
+        uint64_t buffer_pos = 0;
+        uint64_t current_seek = u_seek;
+
+        for (auto &ind: frag) {
             uint64_t block_size = ind.blocks * 512;
 
+            // Пропускаем фрагменты до нужной позиции
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
-
-            uint64_t start_block = current_seek / 512;
+            // Вычисляем позицию внутри текущего фрагмента
             uint64_t block_offset = current_seek % 512;
-            uint64_t blocks_available = ind.blocks - start_block;
-            uint64_t bytes_available = blocks_available * 512 - block_offset;
+            uint64_t start_block = current_seek / 512;
+            uint64_t bytes_available = block_size - current_seek;
 
-            if (remaining <= bytes_available) {
+            // Сколько байт можем прочитать из этого фрагмента
+            uint64_t bytes_to_read = min(bytes_remaining, bytes_available);
 
-                uint64_t blocks_needed = (remaining + block_offset + 511) / 512;
-                disk::read(ind.start + start_block, blocks_needed, buffer + buffer_offset);
+            if (bytes_to_read > 0) {
+                if (block_offset == 0 && bytes_to_read % 512 == 0) {
+                    // Идеальный случай - чтение целыми секторами без смещения
+                    disk::read(ind.start + start_block, bytes_to_read / 512,
+                               buffer + buffer_pos);
+                } else {
+                    // Сложный случай - есть смещение или неполные сектора
+                    uint64_t read = 0;
 
-                if (block_offset > 0 || remaining % 512 != 0) {
+                    // Чтение первого (возможно неполного) сектора
+                    if (block_offset > 0) {
+                        char sector_buffer[512];
+                        disk::read(ind.start + start_block, 1, sector_buffer);
 
-                    memmove(buffer + buffer_offset,
-                            buffer + buffer_offset + block_offset,
-                            remaining);
-                }
-                return res;
-            } else {
+                        uint64_t chunk = min(512 - block_offset, bytes_to_read);
+                        memcpy(buffer + buffer_pos, sector_buffer + block_offset, chunk);
 
-                if (block_offset > 0) {
+                        read += chunk;
+                        start_block++;
+                    }
 
-                    managed<char> temp(512);
-                    disk::read(ind.start + start_block, 1, temp.data());
-                    uint64_t chunk = min(512 - block_offset, remaining);
-                    memcpy(buffer + buffer_offset, temp.data() + block_offset, chunk);
-                    buffer_offset += chunk;
-                    remaining -= chunk;
-                    start_block++;
-                }
-
-
-                if (start_block < ind.blocks && remaining > 0) {
-                    uint64_t full_blocks = min(remaining / 512, ind.blocks - start_block);
-                    if (full_blocks > 0) {
+                    // Чтение полных секторов
+                    if (bytes_to_read - read >= 512) {
+                        uint64_t full_blocks = (bytes_to_read - read) / 512;
                         disk::read(ind.start + start_block, full_blocks,
-                                  buffer + buffer_offset);
-                        buffer_offset += full_blocks * 512;
-                        remaining -= full_blocks * 512;
+                                   buffer + buffer_pos + read);
+                        read += full_blocks * 512;
+                        start_block += full_blocks;
+                    }
+
+                    // Чтение последнего неполного сектора
+                    if (bytes_to_read - read > 0) {
+                        char sector_buffer[512];
+                        disk::read(ind.start + start_block, 1, sector_buffer);
+
+                        uint64_t chunk = bytes_to_read - read;
+                        memcpy(buffer + buffer_pos + read, sector_buffer, chunk);
                     }
                 }
-                current_seek = 0;
+
+                buffer_pos += bytes_to_read;
+                bytes_remaining -= bytes_to_read;
+                current_seek = 0; // В следующих фрагментах смещение уже не нужно
             }
+
+            if (bytes_remaining == 0) break;
         }
 
         return res;
     }
 
-
-    static void write_full(managed<indirect>& frag, const managed<char>& data) {
-        write(frag, 0, data);
+    static void write_full(managed<indirect> &frag, const managed<char> &data, linkednode linked) {
+        write(frag, 0, data, linked);
     }
 
-
-    static managed<char> read_full(managed<indirect>& frag) {
+    static managed<char> read_full(managed<indirect> &frag) {
         return read(frag, 0, getsize(frag));
     }
 
-
     static managed<indirect> hardwarealloc(size_t size) {
         managed<indirect> res = {};
-        uint64_t allc = 0;
-        bool sc = true;
 
-        for (int fragc = 1; fragc < 64; ++fragc) {
+        for (int fragc = 1; fragc < FRAGCOUNT; ++fragc) {
             res.clear();
-            for (int i = 0; i <= fragc; ++i) {
-                indirect ind;
+            size_t allocated = 0;
+            size_t remaining = size;
 
-                if (i == fragc) ind = dispatcher::getblock((max(size-allc, 0)));
-                else ind = dispatcher::getblock((size/fragc));
-                allc += size/fragc;
+            for (int i = 0; i < fragc; ++i) {
+                size_t block_size;
+                if (i == fragc - 1) {
+                    block_size = remaining;
+                } else {
+                    block_size = size / fragc;
+                    remaining -= block_size;
+                }
+
+                indirect ind = dispatcher::getblock(block_size);
 
                 if (ind.blocks == 0) {
-                    sc = false;
-                    allc = 0;
-                    dispatcher::setblock(ind, false);
+                    for (auto &block: res) {
+                        dispatcher::setblock(block, false);
+                    }
+                    res.clear();
                     break;
                 }
+
                 res.push_back(ind);
+                allocated += block_size;
             }
-            if (sc) {
+
+            if (allocated == size && res.size() == static_cast<size_t>(fragc)) {
                 return res;
             }
-            sc = true;
         }
+
         panic("Out of hardware memory");
     }
 
-    static uint64_t getsize(managed<indirect>& frag) {
+    static uint64_t getsize(managed<indirect> &frag) {
         size_t size = 0;
-        for (indirect& ind : frag) {
+        for (indirect &ind: frag) {
             size += ind.blocks * 512;
         }
         return size;

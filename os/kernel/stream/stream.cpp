@@ -22,6 +22,8 @@ protected:
     wstring buffer;
     virtual void _flush() = 0;
 public:
+    virtual ~stream_base() = default;
+
     int width = 0;
     int base = 10;
     bool boolalpha = true;

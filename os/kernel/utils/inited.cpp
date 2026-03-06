@@ -2,7 +2,6 @@
 
 #include "utils.cpp"
 #include "getblocks.cpp"
-#include "debugtree.cpp"
 
 managed<string> split(const string& s, char sep) {
     managed<string> res{};
@@ -56,7 +55,7 @@ template<typename T> managed<char> bytestream(T arg) {
     uint64_t size = sizeof(arg);
     out.reserve(size);
     for (uint64_t i = 0; i < size; i++) {
-        out[i] = ((char*)(&arg))[i];
+        out.push_back(((char*)(&arg))[i]);
     }
     return out;
 }

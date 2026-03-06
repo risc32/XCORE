@@ -37,7 +37,7 @@ MemoryInfoE801 detect_memory() {
     return info;
 }
 
-#define HEAP_SIZE (80*1024*1024)
+#define HEAP_SIZE (120*1024*1024)
 #define MAXB_SIZE 512
 #define MINB_SIZE 32
 #define ALIGN 64
@@ -51,51 +51,73 @@ struct alignas(64) memory_block {
     memory_block *next;
     memory_block *back;
     size_t size;
+
+    void* getdata() {
+        return this+1;
+    }
 };
+
+
+
+#ifndef stage2
+#include "allocv2.cpp"
 
 struct memory {
-
     alignas(64) static char heap[HEAP_SIZE];
-    static memory_block *first;
-    static const memory_block * const last;
+    static AllocV2 kheap;
 
-    static int mbids;
+    static void init();
 
-    static void init() {  ///for stacktrace
-
-        first = (memory_block*)heap;
-        first->size = HEAP_SIZE - sizeof(memory_block);
-        first->used = false;
-        first->next = nullptr;
-
-        s0::put("void memory::init() KERNEL 0x20000 .text\n");
-    }
-
-    static void reset() {
-        first = (memory_block*)heap;
-        first->size = (1024 * 1024 * 16) - sizeof(memory_block);
-        first->used = false;
-        first->next = nullptr;
-        mbids = 0;
-
-
-        //memzero(heap, sizeof(heap));
-
-
-        first->size = (1024 * 1024 * 16) - sizeof(memory_block);
-        first->used = false;
-        first->next = nullptr;
-    }
-
-    static size_t align_size(size_t size) {
-        const size_t MIN_BLOCK_SIZE = sizeof(memory_block) + ALIGN;
-        if (size < MIN_BLOCK_SIZE) {
-            size = MIN_BLOCK_SIZE;
-        }
-        size = (size + (ALIGN - 1)) & ~(ALIGN - 1);
-        return size;
-    }
+    // Обертки для удобства
+    static void* kmalloc(size_t size);
+    static void kfree(void* ptr);
+    static void *krealloc(void* ptr, size_t size);
 };
+
+extern "C" void *allocate(size_t size) {return memory::kmalloc(size); }
+extern void* malloc(size_t size) { return memory::kmalloc(size); }
+extern void free(void* ptr) { memory::kfree(ptr); }
+extern "C" void* realloc(void* ptr, size_t size) { return memory::krealloc(ptr, size); }
+void *calloc(size_t num, size_t size) {
+    size_t total_size = num * size;
+    void *ptr = allocate(total_size);
+
+    if (ptr) {
+        memzero(ptr, total_size);
+    }
+
+    return ptr;
+}
+
+// Операторы для C++ объектов
+void* operator new(size_t size) { return malloc(size); }
+void* operator new[](size_t size) { return malloc(size); }
+void operator delete(void* p) noexcept { free(p); }
+void operator delete[](void* p) noexcept { free(p); }
+void operator delete(void* p, size_t) noexcept { free(p); }
+
+void memory::init() {
+    kheap.init(heap, HEAP_SIZE);
+    s0::put("SafeAllocator initialized on kernel heap (80MB)\n");
+}
+
+void* memory::kmalloc(_size_t size) {
+    return kheap.malloc(size);
+}
+
+void memory::kfree(void* ptr) {
+    kheap.free(ptr);
+}
+
+void *memory::krealloc(void* ptr, size_t size) {
+    return kheap.realloc(ptr, size);
+}
+
+// Инициализация статических членов
+alignas(64) char memory::heap[HEAP_SIZE] = {};
+AllocV2 memory::kheap = {};
+#endif
+
 
 uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
 
@@ -118,12 +140,6 @@ uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
     //return (void*)(0 + offset);
 }
 
-alignas(64) char memory::heap[HEAP_SIZE] = {};
-memory_block *memory::first = (memory_block *) memory::heap;
-const memory_block * const memory::last = (memory_block *) memory::heap;
-
-int memory::mbids = 0;
-
 #include "basic/memchr.cpp"
 #include "basic/memcmp.cpp"
 #include "basic/memcpy.cpp"
@@ -131,9 +147,9 @@ int memory::mbids = 0;
 #include "basic/memset.cpp"
 
 #ifndef stage2
-#include "allocate.cpp"
-#include "free.cpp"
-#include "realloc.cpp"
+//#include "allocate.cpp"
+//#include "free.cpp"
+//#include "realloc.cpp"
 #endif
 
 #include "paging/paging.cpp"

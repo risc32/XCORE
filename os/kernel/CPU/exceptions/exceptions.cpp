@@ -6,6 +6,16 @@
 #include "../../stream/cstatic.cpp"
 #include "../../debug/debug.cpp"
 
+void *malloc(size_t size);
+extern "C" void* __cxa_allocate_exception(size_t size) {
+    return malloc(size);  // нужен malloc!
+}
+
+void free(void *ptr);
+extern "C" void __cxa_free_exception(void* obj) {
+    free(obj);
+}
+
 typedef void (*isr_t)(registers_t *);
 void load_idt64();
 void init_idt64();
@@ -28,12 +38,76 @@ struct exception {
 #define TRACE __PRETTY_FUNCTION__
 #define panic(x) _panic(TRACE, x)
 
-[[noreturn]] void _panic(const char* func, const char *message) {
+extern "C" void debug_trap() {
+    asm volatile("int3");  // software breakpoint
+}
+
+struct PanicContext {
+    bool halt = true;
+
+    /// error code, error func, message
+    void (*func)(int, const char *, const char*) = nullfunc;
+
+    static void nullfunc(int, const char *, const char*){}
+
+};
+void _panic(const char* func, const char *message);
+
+#include "../../managed/managed.cpp"
+
+struct Exceptions {
+    void init() {
+        catchers = {};
+        catchers.push({});
+    }
+
+    Stack<PanicContext> catchers;
+
+    void setcatch(PanicContext ctx) {
+        catchers.push(ctx);
+    }
+
+    void delcatch() {
+        catchers.pop();
+    }
+
+    bool needhalt() {
+        return catchers.peek().halt;
+    }
+
+    void func(int error_code, const char* func, const char *message) {
+        catchers.peek().func(error_code, func, message);
+    }
+} _globctx;
+
+void setcatch(PanicContext ctx) {
+    _globctx.setcatch(ctx);
+}
+
+void delcatch() {
+    _globctx.delcatch();
+}
+
+bool needhalt() {
+    return _globctx.needhalt();
+}
+
+void func(int error_code, const char* func, const char *message) {
+    _globctx.func(error_code, func, message);
+}
+
+void _panic(const char* func, const char *message) {
     s0::put("void _panic()\n\r");
     s0::put(func);
     s0::put(": ");
     s0::put(message);
     s0::put("\n\r");
+
+    _globctx.func(0, func, message);
+
+    if (!_globctx.needhalt()) {
+        return;
+    }
 
     Console& console = _kcons::console;
     console.set_color(RED, BLACK);
@@ -78,8 +152,8 @@ struct exception {
 }
 
 
-void stop() {  ///for stacktrace
-
+[[noreturn]] void stop() {  ///for stacktrace
+    debug_trap();
     while (true) { asm volatile ("hlt"); }
 }
 
@@ -129,3 +203,4 @@ isr_t exception::interrupt_handlers[256] = {};
 
 #include "fault.cpp"
 #include "idt.cpp"
+

@@ -6,7 +6,7 @@ Console::Console() : shift_pressed(false), ctrl_pressed(false), alt_pressed(fals
 }
 
 void Console::init() {
-    //history = CBuffer{(uint64_t)Screen::chargetmin()};
+
 }
 
 void Console::write(char c, bool both) {

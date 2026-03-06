@@ -82,7 +82,7 @@ pcommand parse_cmd(const string& com) {
     }
 
     return res;
-    //s.opera;
+
 }
 
 
@@ -90,7 +90,7 @@ pcommand parse_cmd(const string& com) {
 struct cmd {
     static managed<command> commands;
 
-    static void init() {  ///for stacktrace
+    static void init() {
         s0::put("void cmd::init() KERNEL 0x20000 .text\n");
 
         commands = managed<command>();
@@ -111,13 +111,13 @@ struct cmd {
 
     static void execute(string com) {
         KernelOut kout = {};
-        //kout << (com.size()) << endl;
+
         pcommand pcom = parse_cmd(com);
 
 
 
 
-        //kout << string("abcdabcdabcdabcdabcd");
+
 
         for (command ccom : commands) {
             if (pcom.name == ccom.name) {

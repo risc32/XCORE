@@ -6,7 +6,7 @@
 struct _kcons {
     static Console console;
 
-    static void init() {  ///for stacktrace
+    static void init() {
         s0::put("void _kcons::init() KERNEL 0x20000 .text\n");
 
         console = Console();

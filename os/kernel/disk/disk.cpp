@@ -47,27 +47,27 @@ struct disk {
     {
         if (data.size() == 0) return true;
 
-        // Вычисляем начальный сектор и смещение
+
         uint64_t start_lba = lba + (seek / 512);
         uint64_t offset_in_first = seek % 512;
         uint64_t bytes_remaining = data.size();
         uint64_t data_pos = 0;
 
-        // Буфер для временного хранения при частичной записи сектора
+
         char sector_buffer[512];
 
-        // Обработка первого сектора (если есть смещение)
+
         if (offset_in_first > 0) {
-            // Читаем существующий сектор
+
             read(start_lba, 1, sector_buffer);
 
-            // Сколько байт можем записать в первый сектор
+
             uint64_t bytes_to_write = min(bytes_remaining, 512 - offset_in_first);
 
-            // Копируем данные в буфер с учётом смещения
+
             memcpy(sector_buffer + offset_in_first, data.data() + data_pos, bytes_to_write);
 
-            // Записываем изменённый сектор
+
             if (!driver.write(start_lba, sector_buffer))
                 return false;
 
@@ -76,7 +76,7 @@ struct disk {
             start_lba++;
         }
 
-        // Записываем полные сектора
+
         while (bytes_remaining >= 512) {
             if (!driver.write(start_lba, data.data() + data_pos))
                 return false;
@@ -86,15 +86,15 @@ struct disk {
             start_lba++;
         }
 
-        // Обработка последнего неполного сектора
+
         if (bytes_remaining > 0) {
-            // Читаем существующий сектор
+
             read(start_lba, 1, sector_buffer);
 
-            // Копируем остаток данных
+
             memcpy(sector_buffer, data.data() + data_pos, bytes_remaining);
 
-            // Записываем изменённый сектор
+
             if (!driver.write(start_lba, sector_buffer))
                 return false;
         }

@@ -20,7 +20,7 @@ public:
     static int trace_count;
     static int current_depth;
 
-    static void init() {  ///for stacktrace
+    static void init() {
 
         trace_count = 0;
         current_depth = 0;
@@ -38,7 +38,7 @@ public:
         trace_count++;
     }
 
-    static void exit_function() {  ///for stacktrace
+    static void exit_function() {
         trace_count--;
         if (current_depth > 0) current_depth--;
     }
@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    static uint32_t read_timer() {  ///for stacktrace
+    static uint32_t read_timer() {
 
         static uint32_t ticks = 0;
         return ticks++;
@@ -84,12 +84,12 @@ public:
         FunctionTracer::enter_function(func_name, addr);
     }
 
-    ~FunctionTracerRAII() {  ///for stacktrace
+    ~FunctionTracerRAII() {
 
         FunctionTracer::exit_function();
     }
 };
-//
+
 extern "C" void __cyg_profile_func_enter(void *this_fn, void *call_site);
 extern "C" void __cyg_profile_func_exit(void *this_fn, void *call_site);
 
@@ -101,7 +101,7 @@ extern "C" void __cyg_profile_func_exit(void *this_fn, void *call_site) {
     FunctionTracer::exit_function();
 }
 
-extern "C" void _Unwind_Resume() {  ///for stacktrace
+extern "C" void _Unwind_Resume() {
  while (1); }
-extern "C" void __gxx_personality_v0() {  ///for stacktrace
+extern "C" void __gxx_personality_v0() {
  while (1); }

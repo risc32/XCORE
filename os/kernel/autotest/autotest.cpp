@@ -28,11 +28,11 @@ void check(TestResult *resbuf, unsigned short *cbuf, Console console, int count)
     }
 }
 
-void autotest() {  ///for stacktrace
+void autotest() {
     setcatch({false});
     unsigned short cbuf[4000] = {};
     Console console = Console();
-    //console.set_color(LI, MAGENTA);
+
 
     console.writeLine("KERNEL PANIC\n", true);
     console.writeLine("AUTOTEST FAILED", true);

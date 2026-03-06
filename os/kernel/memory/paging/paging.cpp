@@ -127,7 +127,7 @@ struct paging {
             invlpg(virtual_addr);
 
 
-            //test_access(virtual_addr);
+
 
             return true;
         } else {

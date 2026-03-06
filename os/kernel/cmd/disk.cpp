@@ -15,7 +15,7 @@ int disk(const managed<string>& args) {
     CHECK(1)
     string com = args[0];
 
-    //kout << (args[0] == "readsec") << ":" << args[1].size() << endl;
+
 
     if (com == "info") {
         kout << "XCore File System v1.0 XCFS" << endl;
@@ -49,7 +49,7 @@ int disk(const managed<string>& args) {
             kout << "DISK ERROR" << endl;
             return 1;
         }
-        //kout << "SUCCESSFUL" << endl;
+
 
     } else {
         kout << "UNKNOWN COMMAND: " << '"' << com << '"' << endl;

@@ -68,7 +68,7 @@ struct memory {
 
     static void init();
 
-    // Обертки для удобства
+
     static void* kmalloc(size_t size);
     static void kfree(void* ptr);
     static void *krealloc(void* ptr, size_t size);
@@ -89,7 +89,7 @@ void *calloc(size_t num, size_t size) {
     return ptr;
 }
 
-// Операторы для C++ объектов
+
 void* operator new(size_t size) { return malloc(size); }
 void* operator new[](size_t size) { return malloc(size); }
 void operator delete(void* p) noexcept { free(p); }
@@ -113,7 +113,7 @@ void *memory::krealloc(void* ptr, size_t size) {
     return kheap.realloc(ptr, size);
 }
 
-// Инициализация статических членов
+
 alignas(64) char memory::heap[HEAP_SIZE] = {};
 AllocV2 memory::kheap = {};
 #endif
@@ -137,7 +137,7 @@ uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
     }
 
 
-    //return (void*)(0 + offset);
+
 }
 
 #include "basic/memchr.cpp"
@@ -147,9 +147,9 @@ uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
 #include "basic/memset.cpp"
 
 #ifndef stage2
-//#include "allocate.cpp"
-//#include "free.cpp"
-//#include "realloc.cpp"
+
+
+
 #endif
 
 #include "paging/paging.cpp"

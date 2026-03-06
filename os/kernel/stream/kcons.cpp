@@ -21,7 +21,7 @@ class KernelIn : public istream {
 protected:
     void _flush() override {}
 public:
-    KernelIn () : istream() {  ///for stacktrace
+    KernelIn () : istream() {
 }
 
     template<typename T>
@@ -35,12 +35,12 @@ public:
         return *this;
     }
 
-    static string readLine() {  ///for stacktrace
+    static string readLine() {
 
         return _kcons::console.readLine();
     }
 
-    wstring* ibuf() {  ///for stacktrace
+    wstring* ibuf() {
 
         return &(buffer);
     }
@@ -53,15 +53,15 @@ struct _workersetc {
 
 class KernelOut : public ostream {
 protected:
-    //Console console = Console();
+
 
     void _flush() override {
         _kcons::console.write(buffer.data(), true);
-        //Screen::out(buffer.data());
-        //Screen::frame();
+
+
     }
 public:
-    KernelOut () : ostream() {  ///for stacktrace
+    KernelOut () : ostream() {
 }
 
     template<typename T>
@@ -84,14 +84,14 @@ public:
         return *this;
     }
 
-    wstring* obuf() {  ///for stacktrace
+    wstring* obuf() {
 
         return &(buffer);
     }
 
-    void clear() override {  ///for stacktrace
-        //Screen::clear();
-        //Screen::clear(0, Screen::info);
+    void clear() override {
+
+
         _kcons::console.clear();
         buffer.clear();
     }
@@ -109,4 +109,3 @@ void reset(ostream& kernelOut) {
     _kcons::console.reset_color();
 }
 
-//KernelOut kout;

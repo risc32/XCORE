@@ -1,6 +1,6 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
-//#include "../../types/types.cpp"
+
 
 typedef unsigned long long uint64_t;
 
@@ -81,9 +81,9 @@ struct Console {
     static unsigned char last_scancode;
     static bool key_processed;
 
-    //CBuffer& history;
-    //CBuffer& rendered;
-    //uint64_t pointer;
+
+
+
 
     Console();
 

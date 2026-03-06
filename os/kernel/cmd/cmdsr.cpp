@@ -21,7 +21,7 @@ int cmdsr(const managed<string>& args) {
         return 1;
     }
 
-    //kout << (args[0] == "readsec") << ":" << args[1].size() << endl;
+
 
     return 0;
 }

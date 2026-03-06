@@ -8,7 +8,7 @@
 
 void *malloc(size_t size);
 extern "C" void* __cxa_allocate_exception(size_t size) {
-    return malloc(size);  // нужен malloc!
+    return malloc(size);
 }
 
 void free(void *ptr);
@@ -26,7 +26,7 @@ struct exception {
     const static char *messages[];
     static isr_t interrupt_handlers[256];
 
-    static void init() {  ///for stacktrace
+    static void init() {
         s0::put("void exception::init() KERNEL 0x20000 .text\n");
 
         init_idt64();
@@ -39,13 +39,13 @@ struct exception {
 #define panic(x) _panic(TRACE, x)
 
 extern "C" void debug_trap() {
-    asm volatile("int3");  // software breakpoint
+    asm volatile("int3");
 }
 
 struct PanicContext {
     bool halt = true;
 
-    /// error code, error func, message
+
     void (*func)(int, const char *, const char*) = nullfunc;
 
     static void nullfunc(int, const char *, const char*){}
@@ -112,11 +112,11 @@ void _panic(const char* func, const char *message) {
     Console& console = _kcons::console;
     console.set_color(RED, BLACK);
     console.writeLine("\n\n", true);
-    //int cy = Screen::cursor_y;
-    //for (int i = 0; i < 80; ++i) {
 
-    //}
-    //console.place(" FAULT ", 36, cy);
+
+
+
+
     console.writeLine("", true);
     console.reset_color();
 
@@ -142,17 +142,17 @@ void _panic(const char* func, const char *message) {
 
 #ifndef stage2
     debug_print_stacktrace(console);
-    //FunctionTracer::dump_trace(console);
+
 #endif
 
     console.writeLine("System halted", true);
-    //if(interrupt) console.place("PROCESSOR INTERRUPT", 0, 24 );
+
 
     while (true) { asm volatile ("hlt"); }
 }
 
 
-[[noreturn]] void stop() {  ///for stacktrace
+[[noreturn]] void stop() {
     debug_trap();
     while (true) { asm volatile ("hlt"); }
 }

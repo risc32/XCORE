@@ -32,16 +32,16 @@ public:
     explicit stream_base(const wchar_t* buffer) : buffer(buffer) {}
     explicit stream_base(const wstring& ws) : buffer(ws) {}
 
-    bool eof() {  ///for stacktrace
+    bool eof() {
 
         return buffer.empty();
     }
-    bool good() {  ///for stacktrace
+    bool good() {
 
         return !eof();
     }
 
-    virtual void clear() {  ///for stacktrace
+    virtual void clear() {
 
         buffer.clear();
     }
@@ -66,18 +66,18 @@ public:
         this->buffer += swidth(wstring(s), width);
     }
 
-    void remchar() {  ///for stacktrace
+    void remchar() {
 
         this->buffer.pop_back();
     }
 
-    void flush() {  ///for stacktrace
+    void flush() {
 
         _flush();
         buffer.clear();
     };
 
-    wstring& getbuffer() {  ///for stacktrace
+    wstring& getbuffer() {
 
         return this->buffer;
     }
@@ -87,7 +87,7 @@ class ostream : public stream_base {
     void _flush() override {
     }
 public:
-    ostream() : stream_base() {  ///for stacktrace
+    ostream() : stream_base() {
 }
     explicit ostream(const wchar_t* buffer) : stream_base(buffer) {}
     explicit ostream(const wstring& ws) : stream_base(ws) {}
@@ -219,7 +219,7 @@ public:
 
 
 
-//
+
 
 
 
@@ -229,12 +229,12 @@ class istream : public stream_base {
     void _flush() override {
     }
 public:
-    istream() : stream_base() {  ///for stacktrace
+    istream() : stream_base() {
 }
     explicit istream(const wchar_t* buffer) : stream_base(buffer) {}
     explicit istream(const wstring& ws) : stream_base(ws) {}
 
-    wstring getdata() {  ///for stacktrace
+    wstring getdata() {
 
         wstring data = "";
         bool end = false;
@@ -289,7 +289,7 @@ public:
 
     template<typename T>
     istream& operator>>(T& value) {
-        //if(istream::eof()) istream::buffer += wstring(_kcons::console.readLine());
+
         operator>>(value);
         return *this;
     }
@@ -306,7 +306,7 @@ protected:
 
 class iostream : public istream, public ostream {
 public:
-    iostream() : istream(), ostream() {  ///for stacktrace
+    iostream() : istream(), ostream() {
 }
 };
 

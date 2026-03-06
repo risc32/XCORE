@@ -141,7 +141,7 @@ struct VESADriver {
         s0::put("void VESADriver::init() KERNEL 0x20000 .text\n");
 
         VBEInfo* vbe = (VBEInfo*)0x8400;
-        //serial0() << "LPITCH: " << vbe->getPitch() << endl;
+
 
         Screen::info = {};
         Screen::info.width = vbe->xResolution;
@@ -157,16 +157,16 @@ struct VESADriver {
 
         Screen::info.fbdat = vbe->physBasePtr;
 
-        //GraphicsInfo *gfx = (GraphicsInfo *) 0x7000
+
         Screen::size = Screen::info.height * Screen::info.pitch;
 
         Screen::info.rgb = vbe->getColorOrder() == COLOR_ORDER_RGB;
 
         memcpy((void*)&Screen::buffer, (void*)&Screen::info, sizeof(Screen::buffer));
-        //serial0() << hex << Screen::size << endl;
+
         Screen::buffer.framebuffer = (uint64_t*)malloc(Screen::size);
-        //serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
-        //serial0() << hex << (int)Screen::info.framebuffer << endl;
+
+
 
         fullinfo = *vbe;
 

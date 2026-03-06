@@ -59,7 +59,7 @@ struct Screen {
 
         color = getcol(color, buffer);
 
-        ///todo: optimize
+
         for (size_t i = 0; i < size / 4; i++) {
             target_info.fb32[i] = color;
         }
@@ -70,7 +70,7 @@ struct Screen {
             panic("Framebuffer invalid");
 
         color = getcol(color, buffer);
-        ///todo: optimize
+
 
         for (size_t i = 0; i < size / 3; i++) {
             target_info.fb24[i] = color;
@@ -138,7 +138,7 @@ struct Screen {
                     _imemset_spec24(info.fb24 + i * splpixels, gray, splpixels);
 #else
                     __builtin_memcpy(info.fb24 + i * splpixels, buffer.fb24 + i * splpixels, splpixels * 3);
-                    //simd::copy(info.fb24 + i * splpixels, buffer.fb24 + i * splpixels, splpixels * 3);
+
 #endif
                 }
 #ifdef showmap
@@ -150,11 +150,11 @@ struct Screen {
 #endif
 
                 Splame::map[i] <<= 1;
-                //if (Splame::map[i] & 1) simd::copy((info.fb8 + i ), (buffer.fb8 + i * 512), 512);
-                //if (Splame::map[i] & 1) memset((_co_uint24_t*)(info.fb24 + (i * splpixels)), 0xFFFFFFFF, splpixels * 3);
+
+
 
             }
-            //Splame::measure();
+
         }
         else {
             for (int i = 0; i < splamecount; ++i) {
@@ -163,7 +163,7 @@ struct Screen {
             }
         }
 
-        //memcpy((void*)info.framebuffer, (void*)buffer.framebuffer, size);
+
     }
 
     static void draw_char(uint32_t x, uint32_t y, unsigned char c) {
@@ -262,7 +262,7 @@ private:
 
 #include "vesa.cpp"
 #include "text/console.cpp"
-//#include "vga.cpp"
+
 
 GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
 GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};

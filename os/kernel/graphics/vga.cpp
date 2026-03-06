@@ -27,10 +27,10 @@ struct VGADriver {
 
 
         Screen::buffer = Screen::info;
-        //serial0() << hex << Screen::size << endl;
+
         Screen::buffer.framebuffer = (uint64_t*)allocate(Screen::size);
-        //serial0() << hex << (int)Screen::buffer.framebuffer+Screen::size << endl;
-        //serial0() << hex << (int)Screen::info.framebuffer << endl;
+
+
 
         return true;
     }

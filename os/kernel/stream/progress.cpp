@@ -19,24 +19,24 @@ public:
 
     Progress(int total, Console &console, int width = 20, const string& lbl = "")
             : width(width), _current(0), total(total), console(console), label(lbl) {
-        //scroll = console.scrolled;
-        //X = console.cursor_x;
-        //Y = console.cursor_y;
-        //fg = console.current_fg_color;
-        //bg = console.current_bg_color;
 
-        //console.cursor_x += width + 12 + lbl.size() + count_digits(total)*2;
+
+
+
+
+
+
         place();
     }
 
     Progress(int total, int width = 20, const string& lbl = "")
             : width(width), _current(0), total(total), console(_kcons::console), label(lbl) {
-        //scroll = console.scrolled;
-        //X = console.cursor_x;
-        //Y = console.cursor_y;
-        //fg = console.current_fg_color;
-        //bg = console.current_bg_color;
-        //console.cursor_x += width + 12 + lbl.size() + count_digits(total)*2;
+
+
+
+
+
+
         place();
     }
 
@@ -80,13 +80,13 @@ public:
             full_string += wstring(L" ") + wstring(label.data());
         }
 
-        //uint8_t bfg = console.current_fg_color;
-        //uint8_t bbg = console.current_bg_color;
 
-        //console.set_color((VGAColor)fg, (VGAColor)bg);
 
-        //console.place(string(full_string.data()).data(), X, Y-(console.scrolled - scroll));
-        //console.set_color((VGAColor)bfg, (VGAColor)bbg);
+
+
+
+
+
     }
 
     void set(int current) {

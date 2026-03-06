@@ -44,7 +44,7 @@ struct futurefilesystem {
         dispatcher::init();
 
 
-        //kout << bg();
+
         kout.clear();
         kout << WHITE << "XCore";
         kout << reset << " File System v2.1 XCFS " << (dispatcher::ismain ? "[boot disk]" : "") << endl << endl;
@@ -164,11 +164,11 @@ struct futurefilesystem {
             parent = bst.search(s, lsec);
             if (parent.type == it_none) panic("Path not found");
         }
-        //TODO: bst.remove(fname, lsec);
+
     }
 
     static void remove(inode ind) {
-        //TODO: bst.remove(ind);
+
     }
 
     static managed<string> list(string name) {

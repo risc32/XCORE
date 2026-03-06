@@ -39,13 +39,13 @@ struct Directory {
                 it_dir
             });
         auto allocated = fragment::hardwarealloc(1);
-        //if (i.ind.type != it_none) panic("A file or directory with that name already exists");
+
         memcpy(i.ind.fragments, allocated.data(), sizeof i.ind.fragments);
         i.ind.type = it_dir;
 
         disk::write(i.sector, i.ind.data);
 
-        //filesystem::bst.insert(ind);
+
         return Directory(i);
     }
 
@@ -81,26 +81,26 @@ struct Directory {
     }
 
     DirectoryEntry get_entry(uint64_t pos) {
-        //return *(DirectoryEntry*)fragment::read(dir.fragments, pos * sizeof(DirectoryEntry), sizeof(DirectoryEntry)).data();
-        // Шаг 1: Вычисляем смещение (позицию в байтах)
+
+
         size_t offset = pos * sizeof(DirectoryEntry);
 
-        // Шаг 2: Читаем данные из фрагментов по этому смещению
-        // Предполагаем, что read() возвращает какой-то объект (например, vector<char> или свою структуру)
+
+
         auto read_result = fragment::read(linked.ind.fragments, offset, sizeof(DirectoryEntry));
 
-        // Шаг 3: Получаем указатель на сырые данные
+
         const void* raw_data_ptr = read_result.data();
 
-        // Шаг 4: Преобразуем void-указатель в указатель на DirectoryEntry
-        const DirectoryEntry* entry_ptr = static_cast<const DirectoryEntry*>(raw_data_ptr);
-        // Или если используется C-style cast как в оригинале:
-        // const DirectoryEntry* entry_ptr = (DirectoryEntry*)raw_data_ptr;
 
-        // Шаг 5: Разыменовываем указатель, чтобы получить саму структуру
+        const DirectoryEntry* entry_ptr = static_cast<const DirectoryEntry*>(raw_data_ptr);
+
+
+
+
         DirectoryEntry entry = *entry_ptr;
 
-        // Шаг 6: Возвращаем результат
+
         return entry;
     }
 
@@ -112,10 +112,10 @@ struct Directory {
         if (entry.size() > ENAMESZ) return {};
         __int128 entryhash = hash::_highprec1(entry.c_str());
         int pos = 0;
-        //serial0() << "find entry: " << dir.getsize() << " : " << entry << endl;
+
 
         while (pos < linked.ind.getsize() / sizeof(DirectoryEntry)) {
-            //stop();
+
             auto i = get_entry(pos++);
 
             if (i.hash == entryhash and i.compare(entry)) {
@@ -124,7 +124,7 @@ struct Directory {
             }
 
 
-            //if (pos >= dir.getsize() / sizeof(DirectoryStorage)) break;
+
         }
 
         return {};
@@ -176,15 +176,15 @@ struct Directory {
         CHECK(entry)
 
         if (!has_entry(entry)) {
-            // 1. Инициализируем структуру нулями полностью!
+
             DirectoryEntry ent{};
             ent.hash = hash::_highprec1(entry.c_str());
             ent.ind = ind;
 
-            // 2. Безопасное копирование с учетом места под нуль-терминатор
+
             size_t copy_len = (entry.size() < ENAMESZ - 1) ? entry.size() : ENAMESZ - 1;
             memcpy(ent.name, entry.data(), copy_len);
-            ent.name[copy_len] = '\0'; // Гарантируем конец строки для strcmp
+            ent.name[copy_len] = '\0';
 
             fragment::write(linked.ind.fragments, -1, bytestream(ent), linked);
         } else {

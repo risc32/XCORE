@@ -145,14 +145,13 @@ DECLARE_HELPERS(unsigned long, ul, u)
 DECLARE_HELPERS(unsigned long long, ull, u)
 
 
-//inline char *itoa_dec(int value, char *buffer) {
 
-//}
-//
-//inline char *itoa_hex(int value, char *buffer) {
 
-//}
-//
-//inline char *itoa_bin(int value, char *buffer) {
 
-//}
+
+
+
+
+
+
+

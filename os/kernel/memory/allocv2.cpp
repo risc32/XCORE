@@ -5,14 +5,14 @@ namespace HeapConfig {
     constexpr uint32_t MAGIC_HEADER = 0x414C4C4F;
     constexpr uint32_t CANARY       = 0xDEADC0DE;
     constexpr uint8_t  POISON_FREE  = 0xA5;
-    constexpr size_t   ALIGNMENT    = 64; // Высокое выравнивание для кэш-линий и стабильности
+    constexpr size_t   ALIGNMENT    = 64;
 }
 
 void _panic(const char* func, const char *message);
 #define panic(msg) _panic(__PRETTY_FUNCTION__, msg)
 
 struct AllocV2 {
-    // alignas гарантирует, что sizeof(MemoryBlock) будет кратен ALIGNMENT (обычно 64)
+
     struct alignas(HeapConfig::ALIGNMENT) MemoryBlock {
         uint32_t magic;
         size_t size;
@@ -20,7 +20,7 @@ struct AllocV2 {
         uint32_t canary;
         bool is_free;
 
-        // Данные начинаются сразу после структуры
+
         void* data() { return (void*)(this + 1); }
     };
 
@@ -46,7 +46,7 @@ public:
         uintptr_t raw_addr = (uintptr_t)start;
         uintptr_t aligned_addr = align_up(raw_addr);
 
-        // Корректируем размер с учетом выравнивания начала
+
         if (total_size <= (aligned_addr - raw_addr) + sizeof(MemoryBlock)) return;
         total_size -= (aligned_addr - raw_addr);
 
@@ -56,7 +56,7 @@ public:
         head->is_free = true;
         head->next = nullptr;
 
-        // Теперь размер — это всё пространство минус заголовок
+
         head->size = total_size - sizeof(MemoryBlock);
 
         heap_start_addr = (uint64_t)aligned_addr;
@@ -72,24 +72,24 @@ public:
             if (curr->is_free && curr->size >= size) {
                 validate_block(curr);
 
-                // Минимальный остаток для создания нового блока:
-                // Заголовок + хотя бы один квант выравнивания данных
+
+
                 size_t min_split_size = sizeof(MemoryBlock) + HeapConfig::ALIGNMENT;
 
                 if (curr->size >= size + min_split_size) {
-                    // Рассчитываем адрес нового блока ДО изменения размера текущего
-                    // Новый блок будет находиться по адресу: старт_данных + запрошенный_размер
+
+
                     uint8_t* next_block_addr = (uint8_t*)curr->data() + size;
                     MemoryBlock* next_block = (MemoryBlock*)next_block_addr;
 
-                    // Настройка нового свободного блока
+
                     next_block->size = curr->size - size - sizeof(MemoryBlock);
                     next_block->magic = HeapConfig::MAGIC_HEADER;
                     next_block->canary = HeapConfig::CANARY;
                     next_block->is_free = true;
                     next_block->next = curr->next;
 
-                    // Урезаем текущий блок
+
                     curr->size = size;
                     curr->next = next_block;
                 }
@@ -99,13 +99,13 @@ public:
             }
             curr = curr->next;
         }
-        return nullptr; // Out of Memory
+        return nullptr;
     }
 
     void free(void* ptr) {
         if (!ptr) return;
 
-        // Проверка границ кучи
+
         if ((uintptr_t)ptr < heap_start_addr || (uintptr_t)ptr >= heap_end_addr)
             panic("Pointer outside the heap boundaries");
 
@@ -120,21 +120,21 @@ public:
 #endif
         block->is_free = true;
 
-        // Слияние свободных блоков (Coalescing)
+
         MemoryBlock* curr = head;
         while (curr && curr->next) {
             if (curr->is_free && curr->next->is_free) {
-                // Вычисляем фактическое расстояние между текущим блоком и следующим.
-                // Обычно оно равно 0, но может быть зазор из-за выравнивания.
+
+
                 uintptr_t next_addr = (uintptr_t)curr->next;
                 uintptr_t curr_end = (uintptr_t)curr->data() + curr->size;
                 size_t gap = next_addr - curr_end;
 
-                // Поглощаем заголовок следующего блока и его данные
+
                 curr->size += gap + sizeof(MemoryBlock) + curr->next->size;
                 curr->next = curr->next->next;
 
-                // Не двигаем curr, так как новый curr->next тоже может быть свободным
+
             } else {
                 curr = curr->next;
             }
@@ -150,13 +150,13 @@ public:
 
         size = align_up(size);
 
-        // Если текущий блок уже подходит, ничего не делаем
+
         if (block->size >= size) return ptr;
 
-        // Попытка выделить новое место
+
         void* new_ptr = malloc(size);
         if (new_ptr) {
-            // Копируем столько, сколько было в старом блоке
+
             size_t copy_size = block->size;
             uint8_t* src = (uint8_t*)ptr;
             uint8_t* dst = (uint8_t*)new_ptr;

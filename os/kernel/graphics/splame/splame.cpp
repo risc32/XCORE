@@ -23,9 +23,6 @@ struct Splame {
     static void init();
 
     static void measure() {
-        //_sp_bitcount(map, result);
-        //static int counter = 0;
-        //if (counter++ == 100) {
 
 
 
@@ -36,11 +33,14 @@ struct Splame {
 
 
 
-//
 
 
 
-        //}
+
+
+
+
+
     }
 
     static void prefetch(int index, _co_uint24_t* addr) {
@@ -59,7 +59,7 @@ struct HeatUnit {
     }
 
     void Passive() const {
-        //Splame::map[index] = Splame::map[index] << 1;
+
     }
 };
 

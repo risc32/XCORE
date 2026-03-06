@@ -31,11 +31,11 @@ int reboot(argt) {
     ((void(*)(int))0x7C00)(detect_memory().total()*32);
     return 0;
 }
-//rbunny(detect_memory().total()*32);
 
 
 
-//
+
+
 
 int shutdown(argt) {
     auto *acpi_addr = (uint16_t *) 0x40E;

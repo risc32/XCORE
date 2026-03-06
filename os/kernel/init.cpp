@@ -5,7 +5,7 @@ extern "C" [[noreturn]] void endloader();
 extern "C" void middle();
 
 #include "graphics/text/console.hpp"
-//#define showmap
+
 
 namespace s0{
     void put(const char* c);
@@ -31,21 +31,21 @@ extern "C" void kernel_entry() {
 #include "graphics/text/console.hpp"
 #include "CPU/cpu.cpp"
 #include "utils/utils.cpp"
-//#include "cpu/cpu.cpp"
-//#define DEBUG
+
+
 #define main
 #include "disk/atadriver.cpp"
 #include "xcfs/storage.cpp"
 #include "debug/debug.cpp"
 
-//#include "load64/bit64.cpp"
+
 #ifdef stage2
 extern "C" void middle() {
 
 volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
     exception::init();
 
-    //s0::put("MIDDLE STAGE 0x15000 .text\n");
+
     ATADriver driver = {};
 
     outb(0x3D4, 0x0A);
@@ -69,10 +69,10 @@ volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
     }
 
 
-    //use64();
-    //INTEL("mov rsp, 0x7000");
+
+
     INTEL("jmp "STRKDRR);
-    //panic("Returned from kernel");
+
 }
 #else
 
@@ -160,8 +160,8 @@ extern "C" [[noreturn]] void endloader() {
     outb(0x21, 0xFC);
     outb(0xA1, 0xFF);
 
-    //disk::read(KERNEL+128, 128, (char*)0x20000);
-    //setstack(0xFF);
+
+
     _start();
 }
 
@@ -173,7 +173,7 @@ extern "C" [[noreturn]] void endloader() {
 #include "xcfs/xcfs.cpp"
 #include "time/time.cpp"
 #include "graphics/graphics.cpp"
-//#include "../../tools/charlie.hpp"
+
 #include "crypto/uuid.cpp"
 
 #define GBPAG 8
@@ -184,46 +184,46 @@ extern "C" [[noreturn]] void endloader() {
 
     if (!Screen::isConsole())
         while(true) {
-            //Screen::draw(x, y, 0xFFFFFFFF);
+
             Screen::draw_rect(x, y, x+30, y+44, 0xFFFFFFFF);
             x++,y++;
             Screen::frame();
-            //Screen::clear();
+
         }
 }
 
-// void charlietest() {
-//     Timer t{};
-//     Average avgchar{};
-//     Average avgframe{};
-//
-//     Raster charlie{};
-//     charlie.size_y = my_icon_height;
-//     charlie.size_x = my_icon_width;
-//     charlie.map = my_icon_data;
-//     charlie.prepare(Screen::buffer);
-//
-//     int x = 0, y = 200;
-//     int px = 200;
-//
-//     while(true) {
-//         if (x%100 == 0) px+=100;
-//         t.start();
-//         charlie.draw(px+x++%100, y+200, Screen::buffer);
-//         t.stop();
-//         avgchar.add(t.elapsed_ticks());
-//         //if (x%10000 > 5000) charlie.draw(px+x++%100, y+200, Screen::buffer);
-//         t.start();
-//         Screen::frame();
-//         t.stop();
-//         avgframe.add(t.elapsed_ticks());
-//         Screen::draw_string(8, 100, string("charlie: ") + swidth(to_string(avgchar.get()), 10));
-//         Screen::draw_string(8, 116, string("frame(): ") + swidth(to_string(avgframe.get()), 10));
-//         Screen::draw_string(8, 132, string("    all: ") + swidth(to_string(avgframe.get() + avgchar.get()), 10));
-//         Screen::draw_string(8, 148, string(" factor: ") + swidth(to_string(Splame::factor), 10));
-//
-//     }
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void mathtest(int cell = 64) {
     for (int i = 0; i < Screen::info.height / cell; ++i) {
@@ -264,14 +264,14 @@ void init() {
     filesystem::init();
     PageHeap::init();
     paging::gmap(0, 8);
-    //(VSwitcher::swmod(mode1024x768));
+
     VESADriver::init();
     FontManager::init();
     Screen::set_font("ibmvga");
 
     Syscall::init();
 
-    //filesystem::mount();
+
     Random::init();
     _globctx.init();
 }

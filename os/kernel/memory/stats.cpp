@@ -12,7 +12,7 @@ struct stats {
     size_t fragmentation;
 };
 
-stats get_stats() {  ///for stacktrace
+stats get_stats() {
 
     stats stats = {0};
 

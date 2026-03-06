@@ -1,5 +1,5 @@
 #pragma once
-//#define stage2
+
 #include "../types/types.cpp"
 
 #ifndef stage2
@@ -112,8 +112,8 @@ union inode {
         gid = 0;
 
 
-        //memcpy(name, filename.data(), (filename).size());
-        //name[sizeof(name) - 1] = '\0';
+
+
 
         created = 0;
         modified = 0;

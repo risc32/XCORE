@@ -31,21 +31,21 @@ public:
         switch (mode) {
             case write: {
                 if (filesystem::exists(filename)) {
-                    //node = (filename);
-                    //filesystem::();
+
+
                 }
                 else {
 
-                    //node = filesystem::create_file(filename);
+
                 }
                 break;
             }
             case read: {
-                //node = filesystem::open_file(filename);
+
                 break;
             }
             case append: {
-                //node = filesystem::open_file(filename);
+
                 seek = node.getsize();
                 break;
             }

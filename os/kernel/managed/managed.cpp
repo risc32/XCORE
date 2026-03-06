@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../memory/memory.cpp"
-//#include "../cpu/cpu.cpp"
-//#include "initlist.cpp"
+
+
 
 void* calloc(_size_t, _size_t);
 
@@ -58,12 +58,12 @@ public:
             _data[i] = other._data[i];
         }
 
-        // ИСПРАВЛЕНО: Проверяем, что есть место для null-терминатора
+
         if (nullend) {
             if (_size < _capacity) {
                 _data[_size] = T();
             } else {
-                // Нужно увеличить capacity для null-терминатора
+
                 reserve(_capacity + 1);
                 _data[_size] = T();
             }
@@ -253,11 +253,11 @@ public:
             if (!new_data) panic("Out of memory");
 
             for (int i = 0; i < _size; ++i) {
-                new_data[i] = move(_data[i]); // Move existing elements
+                new_data[i] = move(_data[i]);
             }
 
             for (int i = 0; i < _size; ++i) {
-                _data[i].~T(); // Destruct old elements
+                _data[i].~T();
             }
             free(_data);
 

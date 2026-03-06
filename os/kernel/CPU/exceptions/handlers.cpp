@@ -6,8 +6,8 @@
 #include "../../debug/debug.cpp"
 
 extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
-    //s0::put("void universal_fault_handler()\n\r");
-    //s0::put("KERNEL PANIC: ");
+
+
     s0::put(exception::messages[int_no]);
     s0::put(" #");
     s0::puthex(int_no);
@@ -16,7 +16,7 @@ extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
     Console console;
 
 
-    //stop();
+
 
     registers_t regs = {};
     get_basic_registers(&regs);

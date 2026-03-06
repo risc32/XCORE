@@ -20,12 +20,12 @@ struct fragment {
     static void write(managed<indirect> frag, int64_t seek, const managed<char> &data, linkednode linked) {
         if (data.size() == 0) return;
 
-        // Обработка seek = -1 (запись в конец)
+
         if (seek == -1) {
             seek = getsize(frag);
         }
 
-        // Проверка на отрицательный seek после преобразования
+
         if (seek < 0) {
             panic("Negative seek position after -1 expansion");
         }
@@ -38,30 +38,30 @@ struct fragment {
         for (auto &indir: frag) {
             uint64_t block_size = indir.blocks * 512;
 
-            // Пропускаем фрагменты до нужной позиции
+
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
-            // Вычисляем позицию внутри текущего фрагмента
+
             uint64_t block_offset = current_seek % 512;
             uint64_t start_block = current_seek / 512;
             uint64_t bytes_available = block_size - current_seek;
 
-            // Сколько байт можем записать в этот фрагмент
+
             uint64_t bytes_to_write = min(bytes_remaining, bytes_available);
 
             if (bytes_to_write > 0) {
-                // Записываем с учётом смещения внутри фрагмента
+
                 if (block_offset == 0 && bytes_to_write % 512 == 0) {
-                    // Идеальный случай - запись целыми секторами без смещения
+
                     disk::write(indir.start + start_block, bytes_to_write / 512, d + data_pos);
                 } else {
-                    // Сложный случай - есть смещение или неполные сектора
+
                     uint64_t written = 0;
 
-                    // Обработка первого (возможно неполного) сектора
+
                     if (block_offset > 0) {
                         char sector_buffer[512];
                         disk::read(indir.start + start_block, 1, sector_buffer);
@@ -74,7 +74,7 @@ struct fragment {
                         start_block++;
                     }
 
-                    // Запись полных секторов
+
                     while (bytes_to_write - written >= 512) {
                         disk::write(indir.start + start_block,
                                     d + data_pos + written);
@@ -82,7 +82,7 @@ struct fragment {
                         start_block++;
                     }
 
-                    // Обработка последнего неполного сектора
+
                     if (bytes_to_write - written > 0) {
                         char sector_buffer[512];
                         disk::read(indir.start + start_block, 1, sector_buffer);
@@ -95,7 +95,7 @@ struct fragment {
 
                 data_pos += bytes_to_write;
                 bytes_remaining -= bytes_to_write;
-                current_seek = 0; // В следующих фрагментах смещение уже не нужно
+                current_seek = 0;
             }
 
             if (bytes_remaining == 0) break;
@@ -111,23 +111,23 @@ struct fragment {
 
         uint64_t total_size = getsize(frag);
 
-        // Обработка seek = -1 (чтение с конца)
+
         if (seek == -1) {
             if (size > total_size) {
-                seek = 0; // Если запрашиваем больше чем есть, читаем с начала
+                seek = 0;
             } else {
-                seek = total_size - size; // Читаем последние 'size' байт
+                seek = total_size - size;
             }
         }
 
-        // Проверка границ
+
         if (seek < 0 || static_cast<uint64_t>(seek) >= total_size) {
-            return managed<char>(); // Некорректная позиция
+            return managed<char>();
         }
 
         uint64_t u_seek = static_cast<uint64_t>(seek);
 
-        // Корректируем размер, если выходим за пределы
+
         if (u_seek + size > total_size) {
             size = total_size - u_seek;
         }
@@ -141,30 +141,30 @@ struct fragment {
         for (auto &ind: frag) {
             uint64_t block_size = ind.blocks * 512;
 
-            // Пропускаем фрагменты до нужной позиции
+
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
-            // Вычисляем позицию внутри текущего фрагмента
+
             uint64_t block_offset = current_seek % 512;
             uint64_t start_block = current_seek / 512;
             uint64_t bytes_available = block_size - current_seek;
 
-            // Сколько байт можем прочитать из этого фрагмента
+
             uint64_t bytes_to_read = min(bytes_remaining, bytes_available);
 
             if (bytes_to_read > 0) {
                 if (block_offset == 0 && bytes_to_read % 512 == 0) {
-                    // Идеальный случай - чтение целыми секторами без смещения
+
                     disk::read(ind.start + start_block, bytes_to_read / 512,
                                buffer + buffer_pos);
                 } else {
-                    // Сложный случай - есть смещение или неполные сектора
+
                     uint64_t read = 0;
 
-                    // Чтение первого (возможно неполного) сектора
+
                     if (block_offset > 0) {
                         char sector_buffer[512];
                         disk::read(ind.start + start_block, 1, sector_buffer);
@@ -176,7 +176,7 @@ struct fragment {
                         start_block++;
                     }
 
-                    // Чтение полных секторов
+
                     if (bytes_to_read - read >= 512) {
                         uint64_t full_blocks = (bytes_to_read - read) / 512;
                         disk::read(ind.start + start_block, full_blocks,
@@ -185,7 +185,7 @@ struct fragment {
                         start_block += full_blocks;
                     }
 
-                    // Чтение последнего неполного сектора
+
                     if (bytes_to_read - read > 0) {
                         char sector_buffer[512];
                         disk::read(ind.start + start_block, 1, sector_buffer);
@@ -197,7 +197,7 @@ struct fragment {
 
                 buffer_pos += bytes_to_read;
                 bytes_remaining -= bytes_to_read;
-                current_seek = 0; // В следующих фрагментах смещение уже не нужно
+                current_seek = 0;
             }
 
             if (bytes_remaining == 0) break;

@@ -6,8 +6,6 @@
 
 #include "gfxtypes.cpp"
 
-//void init_graphics() {
-//
 
 
 
@@ -15,7 +13,9 @@
 
 
 
-//}
+
+
+
 
 struct biosgraph {
     static GraphicsInfo* gfx;

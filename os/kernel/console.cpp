@@ -162,7 +162,7 @@ struct TextConsole {
         current_bg_color = bg;
     }
 
-    void reset_color() {  ///for stacktrace
+    void reset_color() {
 
         current_fg_color = vgaLIGHT_GRAY;
         current_bg_color = vgaBLACK;
@@ -183,7 +183,7 @@ struct TextConsole {
     }
 
 private:
-    void init_scancode_tables() {  ///for stacktrace
+    void init_scancode_tables() {
         const char normal_init[128] = {
                 0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
                 '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -210,7 +210,7 @@ private:
         }
     }
 
-    void show_cursor() {  ///for stacktrace
+    void show_cursor() {
         update_cursor();
 
         cursor(true);
@@ -231,7 +231,7 @@ private:
         }
     }
 
-    void hide_cursor() {  ///for stacktrace
+    void hide_cursor() {
         update_cursor();
 
         cursor(false);
@@ -325,7 +325,7 @@ public:
 
     string readLine();
 
-    void scroll() {  ///for stacktrace
+    void scroll() {
 
         uint8_t attribute = get_attribute();
         for (int i = 0; i < 80 * 24; i++) {
@@ -337,7 +337,7 @@ public:
         scrolled++;
     }
 
-    void clear() {  ///for stacktrace
+    void clear() {
 
         uint8_t attribute = get_attribute();
 
@@ -462,7 +462,7 @@ public:
         y = cursor_y;
     }
 
-    char readChar() {  ///for stacktrace
+    char readChar() {
 
         while (true) {
 
@@ -516,7 +516,7 @@ public:
         }
     }
 
-    bool hasInput() {  ///for stacktrace
+    bool hasInput() {
 
         unsigned char status = inb(0x64);
         return (status & 0x01) != 0;
@@ -524,13 +524,13 @@ public:
 
     string prompt(string message);
 
-    bool isShiftPressed() {  ///for stacktrace
+    bool isShiftPressed() {
  return shift_pressed; }
-    bool isCapsLock() {  ///for stacktrace
+    bool isCapsLock() {
  return caps_lock; }
-    bool isCtrlPressed() {  ///for stacktrace
+    bool isCtrlPressed() {
  return ctrl_pressed; }
-    bool isAltPressed() {  ///for stacktrace
+    bool isAltPressed() {
  return alt_pressed; }
 
 };
@@ -565,7 +565,7 @@ bool TextConsole::key_processed = true;
 #ifndef stage2
 #include "managed/managed.cpp"
 
-string TextConsole::readLine()  {  ///for stacktrace
+string TextConsole::readLine()  {
     uint8_t attribute = get_attribute();
     string res = "";
 
@@ -598,7 +598,7 @@ string TextConsole::readLine()  {  ///for stacktrace
 
                 buffer[current_y * 80 + current_x] = (attribute << 8) | ' ';
 
-                //buffer[current_y * 80 + current_x] = (0x07 << 8) | ' ';
+
                 set_cursor(current_x, current_y);
             }
         } else if (ch >= 32 && ch <= 126) {

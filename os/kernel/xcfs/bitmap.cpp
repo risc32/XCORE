@@ -127,7 +127,7 @@ struct dispatcher {
     }
 
     static indirect getblock(uint64_t size) {
-        //serial0() << size << " ";
+
         int fco = 0;
         uint64_t start = 0;
 

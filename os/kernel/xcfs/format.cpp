@@ -33,7 +33,7 @@ void filesystem::format() {
 #ifndef noallocdir
     PROC(1, "Root making", {
         filesystem::root = Directory::allocdir();
-        //if (!bst.initialize_filesystem(true)) panic("Error creating root directory");
+
     });
 #endif
 

@@ -12,6 +12,7 @@ struct _kcons {
         console = Console();
     }
 };
+Console _kcons::console = {};
 
 #define mcon _kcons::console
 

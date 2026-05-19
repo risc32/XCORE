@@ -2,8 +2,6 @@
 
 #include "tree.cpp"
 
-
-
 struct compability {
     managed<node*> changes;
 

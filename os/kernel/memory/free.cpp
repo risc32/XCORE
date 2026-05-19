@@ -12,7 +12,6 @@ void free(void *ptr) {
     auto *block = (memory_block *)((char *)ptr - sizeof(memory_block));
     memzero(block->getdata(), block->size);
 
-
     if (block->mbid < 0 || block->mbid >= memory::mbids) {
         return;
     }

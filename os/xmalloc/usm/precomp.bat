@@ -1,0 +1,1 @@
+gcc os/xmalloc/usm/xmalloc.hpp -E -Iinclude -o prep/xmalloc.cpp -D BAREMETAL

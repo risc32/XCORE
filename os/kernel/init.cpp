@@ -6,7 +6,6 @@ extern "C" void middle();
 
 #include "graphics/text/console.hpp"
 
-
 namespace s0{
     void put(const char* c);
 
@@ -16,65 +15,16 @@ namespace s0{
 }
 
 extern "C" void kernel_entry() {
-#ifdef stage2
-
-    middle();
-
-
-#else
     endloader();
-#endif
 }
-
-
 
 #include "graphics/text/console.hpp"
 #include "CPU/cpu.cpp"
 #include "utils/utils.cpp"
 
-
 #define main
 #include "disk/atadriver.cpp"
-#include "xcfs/storage.cpp"
 #include "debug/debug.cpp"
-
-
-#ifdef stage2
-extern "C" void middle() {
-
-volatile unsigned short* vga = (volatile unsigned short*)0xB8000;
-    exception::init();
-
-
-    ATADriver driver = {};
-
-    outb(0x3D4, 0x0A);
-    outb(0x3D5, 0x20);
-    super_block sb = {};
-    driver.read(1, 1, sb.data);
-
-    uint64_t kernel_address = 0;
-
-    int sectors = 1024;
-
-    if (sb.kerneladdr == 0) {
-        sb.kerneladdr = 39;
-    } else {
-    }
-
-
-
-    for (int i = 0; i < sectors / 256; i++) {
-        driver.read(sb.kerneladdr + i * 256, 256, (char*)KERNELADDR + i * 512 * 256);
-    }
-
-
-
-
-    INTEL("jmp "STRKDRR);
-
-}
-#else
 
 #include "stream/cstatic.cpp"
 #include "SIMD/connect.cpp"
@@ -91,15 +41,7 @@ uint64_t getstack() {
     return sp;
 }
 
-void setstack(uint64_t sp) {
-    asm volatile("mov %0, %%rsp" : : "r"(sp));
-    s0::put("\n\rstack: ");
-    s0::puthex(sp);
-    s0::put("\n\r");
-}
-
 extern "C" [[noreturn]] void endloader() {
-
 
     asm volatile(
             "fninit\n"
@@ -109,13 +51,12 @@ extern "C" [[noreturn]] void endloader() {
             "orq $0x22, %%rax\n"
             "movq %%rax, %%cr0\n"
 
-
             "movq %%cr4, %%rax\n"
             "orq $0x600, %%rax\n"
             "movq %%rax, %%cr4\n"
 
             "fwait\n"
-            : : : "rax"
+            : : : "rax", "memory"
             );
     s0::put("void endloader() 0x20000 .text\n");
 
@@ -132,7 +73,7 @@ extern "C" [[noreturn]] void endloader() {
             );
 
     exception::init();
-    disk::init();
+    //disk::init();
 
     __asm__ volatile(
         "cli\n\t"
@@ -140,27 +81,20 @@ extern "C" [[noreturn]] void endloader() {
         "outb %al, %dx\n\t"
     );
 
-
     outb(0x20, 0x11);
     outb(0xA0, 0x11);
-
 
     outb(0x21, 0x20);
     outb(0xA1, 0x28);
 
-
     outb(0x21, 0x04);
     outb(0xA1, 0x02);
-
 
     outb(0x21, 0x01);
     outb(0xA1, 0x01);
 
-
     outb(0x21, 0xFC);
     outb(0xA1, 0xFF);
-
-
 
     _start();
 }
@@ -175,12 +109,12 @@ extern "C" [[noreturn]] void endloader() {
 #include "graphics/graphics.cpp"
 
 #include "crypto/uuid.cpp"
+//#include "fatfs"
 
 #define GBPAG 8
 
 [[noreturn]] void basictest() {
     int x = 0, y = 0;
-
 
     if (!Screen::isConsole())
         while(true) {
@@ -191,39 +125,6 @@ extern "C" [[noreturn]] void endloader() {
 
         }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void mathtest(int cell = 64) {
     for (int i = 0; i < Screen::info.height / cell; ++i) {
@@ -247,12 +148,11 @@ void mathtest(int cell = 64) {
     Screen::draw_rect(256, 0, 2, Screen::info.height, LIGHT_GRAY);
     Screen::draw_rect(0, 256, Screen::info.width, 2, LIGHT_GRAY);
 
-
-
     Screen::frame();
 }
 
 void init() {
+    get_fs();
     s0::put("void _start() KERNEL 0x20000 .text\n");
     _kcons::init();
 
@@ -261,7 +161,7 @@ void init() {
 
     cmd::init();
 
-    filesystem::init();
+    //filesystem::init();
     PageHeap::init();
     paging::gmap(0, 8);
 
@@ -270,10 +170,15 @@ void init() {
     Screen::set_font("ibmvga");
 
     Syscall::init();
-
+    x16G::init();
 
     Random::init();
     _globctx.init();
+    disk::init();
+
+    Time::init();
+    xtask::init();
+
+    //setlapic((void*)cores::baselapic);
 }
 
-#endif

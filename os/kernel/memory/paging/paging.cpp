@@ -57,7 +57,6 @@ struct paging {
 
         VirtualAddress va{virtual_addr};
 
-
         PML4Entry& pml4ent = pml4->entries[va.MB2.pml4];
 
         if (!pml4ent.present) {
@@ -67,9 +66,7 @@ struct paging {
                 return false;
             }
 
-
             memset(pdpt_virt, 0, 4096);
-
 
             uint64_t pdpt_phys = virt_to_phys(pdpt_virt);
 
@@ -80,7 +77,6 @@ struct paging {
             pml4ent.pcd = !cache;
             pml4ent.address = pdpt_phys >> 12;
         }
-
 
         uint64_t pdpt_phys = pml4ent.address << 12;
         void* pdpt_virt = phys_to_virt(pdpt_phys);
@@ -106,7 +102,6 @@ struct paging {
             pdptent.address = pd_phys >> 12;
         }
 
-
         uint64_t pd_phys = pdptent.address << 12;
         void* pd_virt = phys_to_virt(pd_phys);
         PDTable* pd = (PDTable*)pd_virt;
@@ -123,11 +118,7 @@ struct paging {
             pdent.global = global ? 1 : 0;
             pdent.address = physical_addr >> 12;
 
-
             invlpg(virtual_addr);
-
-
-
 
             return true;
         } else {
@@ -135,17 +126,14 @@ struct paging {
         }
     }
 
-
     static bool identity_map(uint64_t addr) {
         return mmap(addr, addr);
     }
-
 
     static bool map_range_identity(uint64_t addr, uint64_t size) {
         map_range_custom(addr, addr, size);
         return true;
     }
-
 
     static bool map_range_custom(uint64_t virt_start, uint64_t phys_start, uint64_t size) {
         for(uint64_t i = 0; i < size; i += 0x200000) {
@@ -153,7 +141,6 @@ struct paging {
         }
         return true;
     }
-
 
     static void gmap(int offset, int giga) {
         for (uint64_t i = 0; i < giga*512; i++) {

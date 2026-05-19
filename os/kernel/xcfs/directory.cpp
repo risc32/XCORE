@@ -45,7 +45,6 @@ struct Directory {
 
         disk::write(i.sector, i.ind.data);
 
-
         return Directory(i);
     }
 
@@ -82,24 +81,15 @@ struct Directory {
 
     DirectoryEntry get_entry(uint64_t pos) {
 
-
         size_t offset = pos * sizeof(DirectoryEntry);
-
-
 
         auto read_result = fragment::read(linked.ind.fragments, offset, sizeof(DirectoryEntry));
 
-
         const void* raw_data_ptr = read_result.data();
-
 
         const DirectoryEntry* entry_ptr = static_cast<const DirectoryEntry*>(raw_data_ptr);
 
-
-
-
         DirectoryEntry entry = *entry_ptr;
-
 
         return entry;
     }
@@ -113,7 +103,6 @@ struct Directory {
         __int128 entryhash = hash::_highprec1(entry.c_str());
         int pos = 0;
 
-
         while (pos < linked.ind.getsize() / sizeof(DirectoryEntry)) {
 
             auto i = get_entry(pos++);
@@ -122,8 +111,6 @@ struct Directory {
 
                 return i;
             }
-
-
 
         }
 
@@ -180,7 +167,6 @@ struct Directory {
             DirectoryEntry ent{};
             ent.hash = hash::_highprec1(entry.c_str());
             ent.ind = ind;
-
 
             size_t copy_len = (entry.size() < ENAMESZ - 1) ? entry.size() : ENAMESZ - 1;
             memcpy(ent.name, entry.data(), copy_len);

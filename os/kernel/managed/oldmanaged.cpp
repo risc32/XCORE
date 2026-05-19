@@ -2,8 +2,6 @@
 
 #include "../memory/memory.cpp"
 
-
-
 void* calloc(_size_t, _size_t);
 
 #define CAPACITY 32
@@ -58,7 +56,6 @@ public:
             _data[i] = other._data[i];
         }
 
-
         if (nullend) {
             if (_size < _capacity) {
                 _data[_size] = T();
@@ -104,7 +101,6 @@ public:
             _capacity = other._capacity;
             nullend = other.nullend;
 
-
             if (nullend && _size < _capacity) {
                 _data[_size] = T();
             }
@@ -135,7 +131,6 @@ public:
         _data[index] = value;
         _size++;
 
-
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -148,7 +143,6 @@ public:
             _data[i] = _data[i + 1];
         }
         _size--;
-
 
         if (nullend && _size < _capacity) {
             _data[_size] = T();
@@ -195,7 +189,6 @@ public:
         for (int i = 0; i < other._size; ++i) {
             _data[old_size + i] = other._data[i];
         }
-
 
         if (nullend && _size < _capacity) {
             _data[_size] = T();
@@ -276,7 +269,6 @@ public:
         }
         _size = newsize;
 
-
         if (nullend && _size < _capacity) {
             _data[_size] = T();
         }
@@ -286,7 +278,6 @@ public:
         if (_size < _capacity) {
             _capacity = _size > 0 ? _size : 1;
             _data = (T *) realloc(_data, _capacity * sizeof(T));
-
 
             if (nullend) {
 

@@ -6,7 +6,6 @@ char digit_to_char(int digit) {
     return '?';
 }
 
-
 template<typename T>
 char* generic_itoa(T value, char* buffer, int base) {
     if (base < 2 || base > 36) {
@@ -20,11 +19,9 @@ char* generic_itoa(T value, char* buffer, int base) {
         return buffer;
     }
 
-
     char temp_buffer[sizeof(T) * 8 + 2];
     int index = 0;
     bool negative = false;
-
 
     typedef long long unsigned_type;
     unsigned_type unsigned_value;
@@ -54,7 +51,6 @@ char* generic_itoa(T value, char* buffer, int base) {
 
     return buffer;
 }
-
 
 template<typename T>
 char* generic_utoa(T value, char* buffer, int base) {
@@ -87,7 +83,6 @@ char* generic_utoa(T value, char* buffer, int base) {
     return buffer;
 }
 
-
 template<typename T> struct make_unsigned;
 template<> struct make_unsigned<signed char> { typedef unsigned char type; };
 template<> struct make_unsigned<unsigned char> { typedef unsigned char type; };
@@ -99,7 +94,6 @@ template<> struct make_unsigned<signed long> { typedef unsigned long type; };
 template<> struct make_unsigned<unsigned long> { typedef unsigned long type; };
 template<> struct make_unsigned<signed long long> { typedef unsigned long long type; };
 template<> struct make_unsigned<unsigned long long> { typedef unsigned long long type; };
-
 
 inline char* itoa(int value, char* buffer, int base) {
     return generic_itoa<int>(value, buffer, base);
@@ -125,7 +119,6 @@ inline char* ulltoa(unsigned long long value, char* buffer, int base) {
     return generic_utoa<unsigned long long>(value, buffer, base);
 }
 
-
 #define DECLARE_HELPERS(type, prefix, sign) \
     inline char* prefix##toa_dec(type value, char* buffer) { \
         return generic_##sign##toa<type>(value, buffer, 10); \
@@ -143,15 +136,4 @@ DECLARE_HELPERS(long long, ll, i)
 DECLARE_HELPERS(unsigned int, u, u)
 DECLARE_HELPERS(unsigned long, ul, u)
 DECLARE_HELPERS(unsigned long long, ull, u)
-
-
-
-
-
-
-
-
-
-
-
 

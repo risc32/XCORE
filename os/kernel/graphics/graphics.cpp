@@ -53,49 +53,55 @@ struct Screen {
         return info.framebuffer == nullptr;
     }
 
-    static void iclear32(volatile GraphicsInfo& target_info, uint32_t color) {
+    static __attribute__((optimize(3))) void iclear32(GraphicsInfo& target_info, uint32_t color) {
         if (!target_info.framebuffer || target_info.pitch == 0)
             panic("Framebuffer invalid");
 
         color = getcol(color, buffer);
 
-
+        volatile uint32_t* fb = (volatile uint32_t*)target_info.fb32;
         for (size_t i = 0; i < size / 4; i++) {
-            target_info.fb32[i] = color;
+            fb[i] = color;
+        }
+        for (int i = 0; i < Splame::maxcount; ++i) {
+            Splame::units[i].Effective();
         }
     }
 
-    static void iclear24(volatile GraphicsInfo& target_info, _co_uint24_t color) {
+    static __attribute__((optimize(3))) void iclear24(GraphicsInfo& target_info, _co_uint24_t color) {
         if (!target_info.framebuffer || target_info.pitch == 0)
             panic("Framebuffer invalid");
 
         color = getcol(color, buffer);
 
-
+        volatile _co_uint24_t* fb = (volatile _co_uint24_t*)target_info.fb24;
         for (size_t i = 0; i < size / 3; i++) {
-            target_info.fb24[i] = color;
+            fb[i] = color;
+        }
+        for (int i = 0; i < Splame::maxcount; ++i) {
+            Splame::units[i].Effective();
         }
     }
 
-    static void draw(uint32_t x, uint32_t y, uint32_t color) {
+    static __attribute__((optimize(3))) void draw(uint32_t x, uint32_t y, uint32_t color) {
         if (x >= info.width || y >= info.height) return;
         if (info.bpp == 24) _iput_pixel24(x, y, uint24(color), buffer);
         else if (info.bpp == 32) _iput_pixel32(x, y, color, buffer);
     }
 
-    static void draw24(uint32_t x, uint32_t y, _co_uint24_t color) {
+    static __attribute__((optimize(3))) void draw24(uint32_t x, uint32_t y, _co_uint24_t color) {
         if (x >= info.width || y >= info.height) return;
         color = getcol(color, buffer);
         _iput_pixel24(x, y, color, buffer);
     }
 
-    static void draw32(uint32_t x, uint32_t y, uint32_t color) {
+    static __attribute__((optimize(3))) void draw32(uint32_t x, uint32_t y, uint32_t color) {
         if (x >= info.width || y >= info.height) return;
         color = getcol(color, buffer);
         _iput_pixel32(x, y, color, buffer);
     }
 
-    static void draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
+    static __attribute__((optimize(3))) void draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
         if (x >= info.width || y >= info.height) return;
 
         const uint32_t end_x = min(x + w, info.width);
@@ -114,56 +120,69 @@ struct Screen {
     }
 
     static void clear(uint32_t color = 0x00000000, GraphicsInfo inf = buffer) {
-        cursor_x = cursor_y = 0;
-        if (inf.is24bpp()) {
+        if (color%0x111111 == 0) {
+            //__builtin_memset(inf.fb32, color, size);
+        }  if (inf.is24bpp()) {
             iclear24(inf, uint24(color));
-
         } else {
             iclear32(inf, color);
-
         }
+        cursor_x = cursor_y = 0;
+
     }
-    static void frame() {
+    static __attribute__((optimize(3))) void frame() {
         Splame::measure();
         INTEL("cld");
 
         if (info.is24bpp()) {
-            _co_uint24_t gray = uint24(DARK_GRAY);
-            _co_uint24_t black = uint24(BLACK);
+            _co_uint24_t* dst = info.fb24;
+            _co_uint24_t* src = buffer.fb24;
 
-            for (int i = 0; i < Splame::maxcount; ++i) {\
+            for (int i = 0; i < Splame::maxcount; ++i) {
 
                 if (Splame::map[i] & 1) {
 #ifdef showmap
-                    _imemset_spec24(info.fb24 + i * splpixels, gray, splpixels);
+                    _imemset_spec24(dst + i * splpixels, gray, splpixels);
 #else
-                    __builtin_memcpy(info.fb24 + i * splpixels, buffer.fb24 + i * splpixels, splpixels * 3);
-
+                    __builtin_memcpy(dst + i * splpixels, src + i * splpixels, splpixels * 3);
 #endif
                 }
 #ifdef showmap
                 else {
-                    _imemset_spec24(info.fb24 + i * splpixels, black, splpixels);
+                    _imemset_spec24(dst + i * splpixels, black, splpixels);
                 }
 #else
-                if (Splame::map[i + 1] & 1) __builtin_prefetch(buffer.fb24 + (i + 1) * splpixels);
+                if (Splame::map[i + 1] & 1) __builtin_prefetch(src + (i + 1) * splpixels);
 #endif
 
                 Splame::map[i] <<= 1;
-
-
-
             }
 
         }
         else {
-            for (int i = 0; i < splamecount; ++i) {
-                if (Splame::map[i] & 1) simd::copy(((char*)info.fb24 + i * 512), ((char*)buffer.fb32 + i * 512), 512);
+            uint32_t* dst = info.fb32;
+            uint32_t* src = buffer.fb32;
 
+            for (int i = 0; i < Splame::maxcount; ++i) {
+
+                if (Splame::map[i] & 1) {
+#ifdef showmap
+                    _imemset_spec24(dst + i * splpixels, gray, splpixels);
+#else
+                    __builtin_memcpy(dst + i * splpixels, src + i * splpixels, splpixels * 4);
+#endif
+                }
+#ifdef showmap
+                else {
+                    _imemset_spec24(dst + i * splpixels, black, splpixels);
+                }
+#else
+                if (Splame::map[i + 1] & 1) __builtin_prefetch(src + (i + 1) * splpixels);
+#endif
+
+                Splame::map[i] <<= 1;
             }
         }
-
-
     }
 
     static void draw_char(uint32_t x, uint32_t y, unsigned char c) {
@@ -171,7 +190,7 @@ struct Screen {
         _idraw_char(c, x, y, buffer, console.font, fg, bg);
     }
 
-    static void draw_string(uint32_t x, uint32_t y, string str) {
+    static void draw_string(uint32_t x, uint32_t y, const string &str) {
         if (x >= info.width || y >= info.height) return;
         _idraw_string(str.c_str(), x, y, buffer, console.font, fg, bg);
     }
@@ -263,7 +282,6 @@ private:
 #include "vesa.cpp"
 #include "text/console.cpp"
 
-
 GraphicsInfo Screen::info = {nullptr, 0, 0, 0};
 GraphicsInfo Screen::buffer = {nullptr, 0, 0, 0};
 size_t Screen::size = 0;
@@ -274,3 +292,5 @@ uint32_t Screen::fg = 0xFFFFFFFF;
 uint32_t Screen::bg = 0x00000000;
 uint32_t Screen::cursor_x = 0;
 uint32_t Screen::cursor_y = 0;
+
+#include "x16G/x16G.cpp"

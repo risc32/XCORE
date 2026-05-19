@@ -45,8 +45,6 @@ Main:
     mov si, DiskError
     call Print
 
-
-
 .Die:
     hlt
     jmp .Die
@@ -101,7 +99,6 @@ videomode:
     int 0x10
     cmp ax, 0x004F
     jne .eg
-
 
     ; Успех
     ret

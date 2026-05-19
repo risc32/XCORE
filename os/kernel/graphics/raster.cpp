@@ -25,7 +25,6 @@ struct Raster {
     }
 
     void draw24(int x, int y, GraphicsInfo info) const {
-
         for (int i = 0; i < size_y; ++i) {
             _iput_line24(x, y + i, ((_co_uint24_t*)map + i * size_x), size_x, info);
         }
@@ -44,6 +43,10 @@ struct Raster {
         } else {
             draw32(x, y, info);
         }
+    }
+
+    void drawcenter(GraphicsInfo info) const {
+        draw((info.width - size_x) / 2, (info.height - size_y) / 2, info);
     }
 };
 

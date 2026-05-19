@@ -4,11 +4,9 @@
 
 #pragma pack(push, 1)
 
-
 constexpr uintptr_t ADDRESS_MASK_4KB = 0x0000FFFFFFFFF000ULL;
 constexpr uintptr_t ADDRESS_MASK_2MB = 0x0000FFFFFFE00000ULL;
 constexpr uintptr_t ADDRESS_MASK_1GB = 0x0000FFFFC0000000ULL;
-
 
 struct PML4Entry {
     uint64_t present    : 1;
@@ -43,7 +41,6 @@ struct PML4Entry {
         this->nx = nx ? 1 : 0;
     }
 };
-
 
 struct PDPTEntry {
     uint64_t present    : 1;
@@ -84,7 +81,6 @@ struct PDPTEntry {
 
     bool is_1gb_page() const { return page_size; }
 };
-
 
 struct PDEntry {
     uint64_t present    : 1;
@@ -128,7 +124,6 @@ struct PDEntry {
 
     bool is_2mb_page() const { return page_size; }
 };
-
 
 struct PTEntry {
     uint64_t present    : 1;

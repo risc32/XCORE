@@ -148,14 +148,34 @@ SwitchToLongMode:
     ; Дальний переход для входа в long mode
     jmp CODE_SEG:(Main + LongModeEntry - $$)
 
-; GDT
+TSS:
+    times 104 db 0
+TSS_end:
 GDT:
 .Null:  dq 0
-.Code:  dq 0x00209A0000000000    ; 64-bit code
-.Data:  dq 0x0000920000000000    ; 64-bit data
-
+.Code:  dq 0x00209A0000000000    ; 64-bit code (0x08)
+.Data:  dq 0x0000920000000000    ; 64-bit data (0x10)
+.UserCode: dq 0x0020FA0000000000 ; 64-bit user code (0x18) — опционально
+.UserData: dq 0x0000F20000000000 ; 64-bit user data (0x20) — опционально
+; TSS дескриптор вычисляется ассемблером
+.TSS:
+    ; Младший qword
+    dw (TSS_end - TSS - 1)        ; limit[15:0]
+    dw TSS                        ; base[15:0]
+    db (TSS shr 16) and 0xFF         ; base[23:16]
+    db 0x89                       ; access (Present, 64-bit TSS)
+    db ((TSS_end - TSS - 1) shr 16) and 0x0F  ; limit[19:16] + flags=0
+    db (TSS shr 24) and 0xFF         ; base[31:24]
+    ; Старший qword
+    dd (TSS shr 32)                ; base[63:32]
+    dd 0                          ; reserved
 .Pointer:
     dw $ - GDT - 1
+    dq GDT
+GDT_end:
+
+gdt_ptr:
+    dw GDT_end - GDT - 1
     dq GDT
 
 ; ============ 64-bit Entry Point ============

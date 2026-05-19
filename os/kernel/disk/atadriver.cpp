@@ -30,7 +30,6 @@ public:
         outb(base_port + ATA_LBA_HIGH, 0);
         outb(base_port + ATA_COMMAND, 0xEC);
 
-
         for (int i = 0; i < 1000; i++) {
             asm volatile ("pause");
         }
@@ -43,14 +42,12 @@ public:
 
         wait_bsy();
 
-
         if (inb(base_port + ATA_LBA_MID) != 0 || inb(base_port + ATA_LBA_HIGH) != 0) {
             lba48_supported = false;
             return false;
         }
 
         wait_drq();
-
 
         uint16_t identify[256];
         for (int i = 0; i < 256; i++) {
@@ -86,7 +83,6 @@ public:
                 identify[i] = inw(base_port + ATA_DATA);
             }
 
-
             geo.total_sectors =
                     (uint64_t)identify[100] |
                     ((uint64_t)identify[101] << 16) |
@@ -105,10 +101,8 @@ public:
         return geo;
     }
 
-
     uint64_t detect_size_simple() {
         char test_buffer[512];
-
 
         for (uint64_t test_sector = 1000; test_sector < (1ULL << 40); test_sector *= 2) {
             if (!read_sector_test(test_sector, test_buffer)) {
@@ -130,7 +124,6 @@ private:
         outb(base_port + ATA_LBA_HIGH, (lba >> 16) & 0xFF);
         outb(base_port + ATA_DRIVE_HEAD, 0xE0 | ((lba >> 24) & 0x0F));
         outb(base_port + ATA_COMMAND, 0x20);
-
 
         for (int i = 0; i < 1000; i++) {
             uint8_t status = inb(base_port + ATA_STATUS);

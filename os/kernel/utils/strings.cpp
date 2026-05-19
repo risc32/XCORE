@@ -2,6 +2,7 @@
 
 #include "../types/types.cpp"
 
+extern "C" {
 
 size_t strlen(const char *str) {
     if (!str) {
@@ -27,10 +28,11 @@ void strcpy(char *dest, const char *src) {
 
 int strcmp(const char *s1, const char *s2) {
     size_t i = 0;
-    while (s1[i] + s2[i] != '\0') {
+    while (s1[i] != '\0' || s2[i] != '\0') {
         if (s1[i] != s2[i]) {
-            return s1[i] - s2[i];
+            return (unsigned char)s1[i] - (unsigned char)s2[i];
         }
+        i++;
     }
     return 0;
 }
@@ -46,3 +48,17 @@ int count_digits(int num, int base = 10) {
     return count;
 }
 
+char* strchr(const char* s, int c) {
+    while (*s) {
+        if (*s == (char)c) {
+            return (char*)s;
+        }
+        s++;
+    }
+    /* Check for null terminator */
+    if (c == '\0') {
+        return (char*)s;
+    }
+    return nullptr;
+}
+}

@@ -45,7 +45,6 @@ extern "C" void debug_trap() {
 struct PanicContext {
     bool halt = true;
 
-
     void (*func)(int, const char *, const char*) = nullfunc;
 
     static void nullfunc(int, const char *, const char*){}
@@ -96,6 +95,8 @@ void func(int error_code, const char* func, const char *message) {
     _globctx.func(error_code, func, message);
 }
 
+#include "../../xtask/low.cpp"
+
 void _panic(const char* func, const char *message) {
     s0::put("void _panic()\n\r");
     s0::put(func);
@@ -113,10 +114,6 @@ void _panic(const char* func, const char *message) {
     console.set_color(RED, BLACK);
     console.writeLine("\n\n", true);
 
-
-
-
-
     console.writeLine("", true);
     console.reset_color();
 
@@ -124,11 +121,15 @@ void _panic(const char* func, const char *message) {
     console.write("MIDDLE PANIC\nPress space for more information\nin ", true);
 #else
     console.write("KERNEL PANIC\nPress space for more information\nin ", true);
+
 #endif
     console.writeLine(func, true);
     console.write("\nMessage: ", true);
     console.write(message, true);
     console.writeLine("", true);
+    console.write("PANIC ON ");
+    console.write((int)smplow::get_core_id());
+    console.writeLine(" CPU");
     while (' ' != console.readChar()) {}
     console.clear();
 #ifdef stage2
@@ -146,14 +147,15 @@ void _panic(const char* func, const char *message) {
 #endif
 
     console.writeLine("System halted", true);
-
+    console.write("PANIC ON ");
+    console.write((int)smplow::get_core_id());
+    console.writeLine(" CPU");
 
     while (true) { asm volatile ("hlt"); }
 }
 
-
 [[noreturn]] void stop() {
-    debug_trap();
+    //debug_trap();
     while (true) { asm volatile ("hlt"); }
 }
 
@@ -204,3 +206,50 @@ isr_t exception::interrupt_handlers[256] = {};
 #include "fault.cpp"
 #include "idt.cpp"
 
+template<auto (*Handler)()>
+struct AsmHandler {
+    static auto stub() {
+        asm volatile(
+            "pushq %%rax\n\t"
+            "pushq %%rbx\n\t"
+            "pushq %%rcx\n\t"
+            "pushq %%rdx\n\t"
+            "pushq %%rsi\n\t"
+            "pushq %%rdi\n\t"
+            "pushq %%rbp\n\t"
+            "pushq %%r8\n\t"
+            "pushq %%r9\n\t"
+            "pushq %%r10\n\t"
+            "pushq %%r11\n\t"
+            "pushq %%r12\n\t"
+            "pushq %%r13\n\t"
+            "pushq %%r14\n\t"
+            "pushq %%r15\n\t"
+
+            "cld\n\t"
+            "call %P0\n\t"
+
+            "popq %%r15\n\t"
+            "popq %%r14\n\t"
+            "popq %%r13\n\t"
+            "popq %%r12\n\t"
+            "popq %%r11\n\t"
+            "popq %%r10\n\t"
+            "popq %%r9\n\t"
+            "popq %%r8\n\t"
+            "popq %%rbp\n\t"
+            "popq %%rdi\n\t"
+            "popq %%rsi\n\t"
+            "popq %%rdx\n\t"
+            "popq %%rcx\n\t"
+            "popq %%rbx\n\t"
+            "popq %%rax\n\t"
+
+            "iretq\n\t"
+            : : "p"(Handler) : "memory"
+        );
+    }
+};
+
+template<void (*Handler)()>
+static auto asm_handler = (void*)AsmHandler<Handler>::stub;

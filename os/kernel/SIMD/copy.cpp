@@ -52,7 +52,6 @@ namespace simd {
         uint8_t* d = (uint8_t*)dst;
         const uint8_t* s = (const uint8_t*)src;
 
-
         if (size > 1024 * 1024) {
 
             size_t i = 0;
@@ -75,7 +74,6 @@ namespace simd {
             d += i; s += i; size -= i;
         }
 
-
         while (size >= 64) {
             asm volatile (
                     "movdqa (%1), %%xmm0\n\t"
@@ -92,7 +90,6 @@ namespace simd {
                     );
             d += 64; s += 64; size -= 64;
         }
-
 
         while (size >= 8) {
             *(uint64_t*)d = *(const uint64_t*)s;

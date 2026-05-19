@@ -9,12 +9,9 @@ struct VGADriver {
 
         GraphicsInfo *gfx = (GraphicsInfo *) 0x7000;
 
-
         if (!gfx->framebuffer || gfx->width == 0 || gfx->height == 0) {
             return false;
         }
-
-
 
         Screen::info.framebuffer = gfx->framebuffer;
         Screen::info.bpp = gfx->bpp;
@@ -22,15 +19,11 @@ struct VGADriver {
         Screen::info.height = gfx->height;
         Screen::info.pitch = gfx->pitch;
 
-
         Screen::size = Screen::info.height * Screen::info.pitch;
-
 
         Screen::buffer = Screen::info;
 
         Screen::buffer.framebuffer = (uint64_t*)allocate(Screen::size);
-
-
 
         return true;
     }

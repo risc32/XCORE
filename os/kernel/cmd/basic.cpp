@@ -19,23 +19,21 @@
 /* Check if bit n in flags is set */
 #define check_flag(flags, n) ((flags) & bit(n))
 
-void rbunny(int total) {
-    waitChar(' ');
-    for (int i = 0; i < total; ++i) {
-        *(uint64_t*)(0x7c00+i+total) = 0;
-    }
-
-}
 int reboot(argt) {
-    memcpy((void*)0x7c00, (void*)&rbunny, 512);
-    ((void(*)(int))0x7C00)(detect_memory().total()*32);
+
+    uint8_t status;
+    do {
+        status = inb(KBRD_INTRFC);
+    } while (check_flag(status, KBRD_BIT_UDATA));
+
+    outb(KBRD_INTRFC, KBRD_RESET);
+
+    struct { uint16_t limit; uint64_t base; } __attribute__((packed)) idt0 = {0, 0};
+    asm volatile ("lidt %0\n\tint $0x00" : : "m"(idt0) : "memory");
+
+    while (true) asm volatile("hlt");
     return 0;
 }
-
-
-
-
-
 
 int shutdown(argt) {
     auto *acpi_addr = (uint16_t *) 0x40E;

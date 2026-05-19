@@ -20,8 +20,6 @@ struct datetime {
     }
 };
 
-
-
 #include "../cpu/ports.cpp"
 
 static uint8_t read_rtc(uint8_t reg) {
@@ -33,7 +31,7 @@ static uint8_t bcd_to_bin(uint8_t bcd) {
     return (bcd >> 4) * 10 + (bcd & 0x0F);
 }
 
-datetime get_rtc_time() {
+datetime _get_rtc_time() {
     datetime dt = {0};
 
     while (read_rtc(0x0A) & 0x80);

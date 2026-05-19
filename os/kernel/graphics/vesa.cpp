@@ -23,7 +23,6 @@ struct VBEInfo {
     uint32_t winFuncPtr;
     uint16_t bytesPerScanLine;
 
-
     uint16_t xResolution;
     uint16_t yResolution;
     uint8_t xCharSize;
@@ -36,7 +35,6 @@ struct VBEInfo {
     uint8_t numberOfImagePages;
     uint8_t reserved1;
 
-
     uint8_t redMaskSize;
     uint8_t redFieldPosition;
     uint8_t greenMaskSize;
@@ -47,11 +45,9 @@ struct VBEInfo {
     uint8_t rsvdFieldPosition;
     uint8_t directColorModeInfo;
 
-
     uint32_t physBasePtr;
     uint32_t offScreenMemOffset;
     uint16_t offScreenMemSize;
-
 
     uint16_t linBytesPerScanLine;
     uint8_t bnkNumberOfImagePages;
@@ -67,7 +63,6 @@ struct VBEInfo {
     uint32_t maxPixelClock;
 
     uint8_t reserved2[194];
-
 
     bool hasLinearBuffer() const {
         return (modeAttributes & 0x80) != 0;
@@ -86,7 +81,6 @@ struct VBEInfo {
         if (memoryModel != 0x06) {
             return COLOR_ORDER_UNKNOWN;
         }
-
 
         uint8_t redPos, greenPos, bluePos;
         uint8_t redSize, greenSize, blueSize;
@@ -109,11 +103,9 @@ struct VBEInfo {
             blueSize = blueMaskSize;
         }
 
-
         if (redSize == 0 || greenSize == 0 || blueSize == 0) {
             return COLOR_ORDER_UNKNOWN;
         }
-
 
         if (redPos > greenPos && greenPos > bluePos) {
             return COLOR_ORDER_RGB;
@@ -133,7 +125,6 @@ struct VBEInfo {
     }
 } __attribute__((packed));
 
-
 struct VESADriver {
     static VBEInfo fullinfo;
 
@@ -141,7 +132,6 @@ struct VESADriver {
         s0::put("void VESADriver::init() KERNEL 0x20000 .text\n");
 
         VBEInfo* vbe = (VBEInfo*)0x8400;
-
 
         Screen::info = {};
         Screen::info.width = vbe->xResolution;
@@ -154,9 +144,7 @@ struct VESADriver {
             Screen::info.pitch = Screen::info.width * ((Screen::info.bpp + 7) / 8);
         }
 
-
         Screen::info.fbdat = vbe->physBasePtr;
-
 
         Screen::size = Screen::info.height * Screen::info.pitch;
 
@@ -165,8 +153,6 @@ struct VESADriver {
         memcpy((void*)&Screen::buffer, (void*)&Screen::info, sizeof(Screen::buffer));
 
         Screen::buffer.framebuffer = (uint64_t*)malloc(Screen::size);
-
-
 
         fullinfo = *vbe;
 

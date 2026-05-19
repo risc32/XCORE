@@ -2,6 +2,7 @@
 
 #include "../cpu/ports.cpp"
 #include "../utils/utils.cpp"
+#include "../async/async.cpp"
 
 namespace s0{
     void put(const char* c) {
@@ -20,9 +21,10 @@ namespace s0{
         itoa(c, b, 10);
         put(b);
 #endif
-    }
+        }
 
     void puthex(int c) {
+
 #ifndef stage2
         char b[8] = {};
         itoa(c, b, 16);

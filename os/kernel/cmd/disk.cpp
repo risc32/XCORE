@@ -11,11 +11,8 @@
 int disk(const managed<string>& args) {
     KernelOut kout;
 
-
     CHECK(1)
     string com = args[0];
-
-
 
     if (com == "info") {
         kout << "XCore File System v1.0 XCFS" << endl;
@@ -49,7 +46,6 @@ int disk(const managed<string>& args) {
             kout << "DISK ERROR" << endl;
             return 1;
         }
-
 
     } else {
         kout << "UNKNOWN COMMAND: " << '"' << com << '"' << endl;

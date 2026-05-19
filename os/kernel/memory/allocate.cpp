@@ -14,7 +14,6 @@ void *allocate(size_t size) {
 
             size_t remaining = block->size - size;
 
-
             if (remaining >= sizeof(memory_block) + MINB_SIZE) {
                 auto *new_block = (memory_block *)(
                         (char *)block + sizeof(memory_block) + size

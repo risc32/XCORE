@@ -5,7 +5,6 @@
 
 class string;
 
-
 enum VGAColor {
     vgaBLACK = 0,
     vgaBLUE = 1,
@@ -25,14 +24,11 @@ enum VGAColor {
     vgaWHITE = 15
 };
 
-
 char wchar_to_cp866(wchar_t wc) {
 
     if (wc < 0x80) {
         return static_cast<char>(wc);
     }
-
-
 
     switch (wc) {
         case L'А': return 0x80; case L'а': return 0xA0;
@@ -134,7 +130,6 @@ struct TextConsole {
         cursor_x = 0;
         cursor_y = 0;
 
-
         current_fg_color = vgaLIGHT_GRAY;
         current_bg_color = vgaBLACK;
 
@@ -146,7 +141,6 @@ struct TextConsole {
         key_processed = true;
         init_scancode_tables();
     }
-
 
     void set_foreground_color(VGAColor color) {
         current_fg_color = color;
@@ -167,7 +161,6 @@ struct TextConsole {
         current_fg_color = vgaLIGHT_GRAY;
         current_bg_color = vgaBLACK;
     }
-
 
     uint8_t get_attribute() const {
         return (current_bg_color << 4) | (current_fg_color & 0x0F);
@@ -251,8 +244,6 @@ public:
         return result;
     }
 
-
-
     void handle_scancode(unsigned char scancode) {
         bool key_released = (scancode & 0x80) != 0;
         unsigned char key_code = scancode & 0x7F;
@@ -294,7 +285,6 @@ public:
 
         char ch = shift_pressed ? scancode_shift[scancode] : scancode_normal[scancode];
 
-
         if (caps_lock) {
             if (ch >= 'a' && ch <= 'z') {
                 ch = shift_pressed ? ch : ch - 32;
@@ -305,7 +295,6 @@ public:
 
         return ch;
     }
-
 
     bool is_arrow_key(unsigned char scancode, int &arrow_type) {
 
@@ -397,8 +386,6 @@ public:
             } else {
                 int offset = cursor_y * 80 + cursor_x;
 
-
-
                 char display_char = wchar_to_cp866(str[i]);
                 buffer[offset] = (attribute << 8) | display_char;
 
@@ -472,15 +459,12 @@ public:
 
             unsigned char scancode = inb(0x60);
 
-
             handle_scancode(scancode);
-
 
             if (scancode & 0x80) {
                 key_processed = true;
                 continue;
             }
-
 
             int arrow_type = 0;
             if (scancode == 0xE0) {
@@ -498,11 +482,9 @@ public:
                 continue;
             }
 
-
             if (scancode == last_scancode && !key_processed) {
                 continue;
             }
-
 
             char c = get_char(scancode);
             if (c != 0) {
@@ -588,7 +570,6 @@ string TextConsole::readLine()  {
             if (res.size() > 0) {
                 res.pop_back();
 
-
                 current_x--;
                 if (current_x < 0) {
                     current_x = 79;
@@ -598,16 +579,13 @@ string TextConsole::readLine()  {
 
                 buffer[current_y * 80 + current_x] = (attribute << 8) | ' ';
 
-
                 set_cursor(current_x, current_y);
             }
         } else if (ch >= 32 && ch <= 126) {
 
             res += ch;
 
-
             buffer[current_y * 80 + current_x] = (attribute << 8) | ch;
-
 
             current_x++;
             if (current_x >= 80) {

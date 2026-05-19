@@ -1,9 +1,6 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-
-typedef unsigned long long uint64_t;
-
 enum Color {
 
     BLACK           = 0x000000,
@@ -23,7 +20,6 @@ enum Color {
     YELLOW          = 0xFFFF55,
     WHITE           = 0xFFFFFF,
 
-
     DARK_BLUE       = 0x000055,
     DARK_GREEN      = 0x005500,
     DARK_CYAN       = 0x005555,
@@ -32,11 +28,9 @@ enum Color {
     DARK_BROWN      = 0x552A00,
     DARK_YELLOW     = 0x555500,
 
-
     GRAY            = 0x808080,
     DIM_GRAY        = 0x696969,
     SLATE_GRAY      = 0x708090,
-
 
     FOREST_GREEN    = 0x228B22,
     NAVY_BLUE       = 0x000080,
@@ -44,7 +38,6 @@ enum Color {
     PURPLE          = 0x800080,
     OLIVE           = 0x808000,
     TEAL            = 0x008080,
-
 
     ORANGE          = 0xFFA500,
     PINK            = 0xFFC0CB,
@@ -54,7 +47,6 @@ enum Color {
     INDIGO          = 0x4B0082,
     CORAL           = 0xFF7F50,
     TURQUOISE       = 0x40E0D0,
-
 
     TRANSPARENT     = 0xFFFFFF + 1
 };
@@ -80,10 +72,6 @@ struct Console {
     static const char scancode_shift[128];
     static unsigned char last_scancode;
     static bool key_processed;
-
-
-
-
 
     Console();
 

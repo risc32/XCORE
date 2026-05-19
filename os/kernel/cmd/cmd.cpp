@@ -64,7 +64,6 @@ struct pcommand {
     managed<string> args;
 };
 
-
 struct command {
     string name;
     int (*func)(argt);
@@ -84,8 +83,6 @@ pcommand parse_cmd(const string& com) {
     return res;
 
 }
-
-
 
 struct cmd {
     static managed<command> commands;
@@ -114,11 +111,6 @@ struct cmd {
 
         pcommand pcom = parse_cmd(com);
 
-
-
-
-
-
         for (command ccom : commands) {
             if (pcom.name == ccom.name) {
 
@@ -144,7 +136,6 @@ private:
         kout << endl << ("Use 'help <command>' for more information") << endl;
         return 0;
     }
-
 
 };
 managed<command> cmd::commands = managed<command>();

@@ -2,7 +2,6 @@
 
 #include "../utils/utils.cpp"
 
-
 #define GPI 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196
 
 namespace Math {
@@ -15,15 +14,11 @@ namespace Math {
     double nan = __builtin_nanf("");
     double inf = __builtin_inff();
 
-
     bool isnan(double x) {
-
-
         return x != x;
     }
 
     bool isinf(double x) {
-
 
         return (x == __builtin_inf() || x == -__builtin_inf());
     }
@@ -49,53 +44,27 @@ namespace Math {
     }
 
     double sqrt(double x) {
-        union { double d; int64_t i; } u = {x};
-        u.i = 0x5FE6EB50C7B537A9 - (u.i >> 1);
-        u.d = 0.5 * (u.d + x / u.d);
-        return u.d;
+        if (x < 0) return -1;
+        if (x == 0) return 0;
+
+        double guess = x;
+        double prev_guess = 0;
+        double epsilon = 1e-10;
+
+        while (abs(guess - prev_guess) > epsilon) {
+            prev_guess = guess;
+            guess = (guess + x / guess) / 2;
+        }
+
+        return guess;
     }
 
     double fmod(double x, double y) {
+        if (y == 0.0 || isinf(x) || isnan(x) || isnan(y)) return nan;
+        if (isinf(y)) return x;
 
-
-        if (y == 0.0) {
-
-            return nan;
-        }
-
-
-        if (isinf(x) || isnan(x) || isnan(y)) {
-
-            return nan;
-        }
-
-        if (isinf(y)) {
-
-            return x;
-        }
-
-
-        double abs_x = abs(x);
-        double abs_y = abs(y);
-
-        if (abs_x < abs_y) {
-            return x;
-        }
-
-
-
-        double remainder = abs_x;
-
-        while (remainder >= abs_y) {
-            remainder -= abs_y;
-        }
-
-
-        if (x < 0.0) {
-            remainder = -remainder;
-        }
-
-        return remainder;
+        double quotient = (int)(x / y);
+        return x - quotient * y;
     }
 
     double sin(double x) {
@@ -139,5 +108,10 @@ namespace Math {
     double tan(double x) {return sin(x)/cos(x);}
     double ctg(double x) {return cos(x)/sin(x);}
 
+    double round(double num, uint64_t decimals) {
+        double multiplier = pow(10, decimals);
+        return (num < 0 ? -1 : 1) * (int64_t)(abs(num) * multiplier + 0.5) / multiplier;
+    }
 
+    double sqrt2 = sqrt(2);
 }

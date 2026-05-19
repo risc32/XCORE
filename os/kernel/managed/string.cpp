@@ -38,7 +38,6 @@ struct string : public managed<char> {
         }
     }
 
-
     string(const string& other) : managed<char>(other) {
         nullend = true;
     }
@@ -85,8 +84,6 @@ struct string : public managed<char> {
         return result;
     }
 
-
-
     string(char c) : managed<char>() {
         nullend = true;
         push_back(c);
@@ -107,7 +104,6 @@ struct string : public managed<char> {
             _data[_size] = '\0';
         }
     }
-
 
     const char* c_str() const {
         return _data;
@@ -149,7 +145,6 @@ struct wstring : public managed<wchar_t> {
             _data[_size] = L'\0';
         }
     }
-
 
     wstring(const wstring& other) : managed<wchar_t>(other) {
         nullend = true;
@@ -239,8 +234,6 @@ string to_string(long long val, int base = 10) {
     return string(ltoa(val, buf, base));
 }
 
-
-
 wstring to_wstring(long long val, int base = 10) {
     char buf[32];
     return wstring(ltoa(val, buf, base));
@@ -308,25 +301,20 @@ int to_int64(const wstring &s, int base = 10) {
 #include "../math/math.cpp"
 string to_string(double value, int precision = 15) {
 
-
     if (Math::isnan(value)) return "nan";
     if (Math::isinf(value)) return value > 0 ? "inf" : "-inf";
-
 
     if (value == 0.0) return "0";
 
     string result;
-
 
     if (value < 0) {
         result += '-';
         value = -value;
     }
 
-
     long long intPart = static_cast<long long>(value);
     double fracPart = value - intPart;
-
 
     string intStr;
 
@@ -341,10 +329,8 @@ string to_string(double value, int precision = 15) {
 
     result += intStr;
 
-
     if (fracPart > 0 && precision > 0) {
         result += '.';
-
 
         if (precision > 15) precision = 15;
 
@@ -354,10 +340,8 @@ string to_string(double value, int precision = 15) {
             result += char('0' + digit);
             fracPart -= digit;
 
-
             if (fracPart < 1e-15) break;
         }
-
 
         while (!result.empty() && result.back() == '0') {
             result.pop_back();

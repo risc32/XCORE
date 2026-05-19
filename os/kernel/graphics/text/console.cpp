@@ -120,7 +120,6 @@ char Console::get_char(unsigned char scancode) {
 
     char ch = shift_pressed ? scancode_shift[scancode] : scancode_normal[scancode];
 
-
     if (caps_lock) {
         if (ch >= 'a' && ch <= 'z') {
             ch = shift_pressed ? ch : ch - 32;
@@ -131,7 +130,6 @@ char Console::get_char(unsigned char scancode) {
 
     return ch;
 }
-
 
 bool Console::is_arrow_key(unsigned char scancode, int &arrow_type) {
     if (scancode == 0xE0) {
@@ -159,15 +157,12 @@ char Console::readChar() {
 
         unsigned char scancode = inb(0x60);
 
-
         handle_scancode(scancode);
-
 
         if (scancode & 0x80) {
             key_processed = true;
             continue;
         }
-
 
         int arrow_type = 0;
         if (scancode == 0xE0) {
@@ -183,11 +178,9 @@ char Console::readChar() {
             continue;
         }
 
-
         if (scancode == last_scancode && !key_processed) {
             continue;
         }
-
 
         char c = get_char(scancode);
         if (c != 0) {

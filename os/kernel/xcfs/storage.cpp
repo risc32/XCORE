@@ -104,16 +104,11 @@ union inode {
     inode (inode_type type,
            uint64_t permissions = 0644, uint64_t parent = 0) {
 
-
         this->type = type;
         this->permissions = permissions;
         link_count = 1;
         uid = 0;
         gid = 0;
-
-
-
-
 
         created = 0;
         modified = 0;

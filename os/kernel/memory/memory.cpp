@@ -9,12 +9,9 @@ struct MemoryInfoE801 {
 
     uint32_t total() {
 
-
         uint32_t total_kb = memory_1mb_16mb;
 
-
         total_kb += memory_above_16mb * 64;
-
 
         total_kb += 640;
 
@@ -42,8 +39,7 @@ MemoryInfoE801 detect_memory() {
 #define MINB_SIZE 32
 #define ALIGN 64
 
-
-void memzero(void *, size_t);
+extern "C" void memzero(void *, size_t);
 
 struct alignas(64) memory_block {
     int mbid;
@@ -57,8 +53,6 @@ struct alignas(64) memory_block {
     }
 };
 
-
-
 #ifndef stage2
 #include "allocv2.cpp"
 
@@ -68,15 +62,21 @@ struct memory {
 
     static void init();
 
-
     static void* kmalloc(size_t size);
     static void kfree(void* ptr);
     static void *krealloc(void* ptr, size_t size);
 };
 
 extern "C" void *allocate(size_t size) {return memory::kmalloc(size); }
-extern void* malloc(size_t size) { return memory::kmalloc(size); }
-extern void free(void* ptr) { memory::kfree(ptr); }
+extern "C" void* malloc(size_t size) { return memory::kmalloc(size); }
+void* promise(size_t size) {
+    void* p = malloc(size);
+    if (!p) {
+        panic("out of memory");
+    }
+    return p;
+}
+extern "C" void free(void* ptr) { memory::kfree(ptr); }
 extern "C" void* realloc(void* ptr, size_t size) { return memory::krealloc(ptr, size); }
 void *calloc(size_t num, size_t size) {
     size_t total_size = num * size;
@@ -89,7 +89,6 @@ void *calloc(size_t num, size_t size) {
     return ptr;
 }
 
-
 void* operator new(size_t size) { return malloc(size); }
 void* operator new[](size_t size) { return malloc(size); }
 void operator delete(void* p) noexcept { free(p); }
@@ -101,7 +100,7 @@ void memory::init() {
     s0::put("SafeAllocator initialized on kernel heap (80MB)\n");
 }
 
-void* memory::kmalloc(_size_t size) {
+void* memory::kmalloc(size_t size) {
     return kheap.malloc(size);
 }
 
@@ -113,42 +112,33 @@ void *memory::krealloc(void* ptr, size_t size) {
     return kheap.realloc(ptr, size);
 }
 
-
 alignas(64) char memory::heap[HEAP_SIZE] = {};
 AllocV2 memory::kheap = {};
 #endif
-
 
 uint64_t _map_phys(uint64_t phys_addr, uint64_t size) {
 
     uint64_t aligned_phys = phys_addr & ~0xFFFULL;
     uint64_t offset = phys_addr - aligned_phys;
 
-
     uint64_t aligned_size = (size + offset + 0xFFF) & ~0xFFFULL;
-
 
     for(uint64_t i = 0; i < aligned_size; i += 0x1000) {
         uint64_t page_phys = aligned_phys + i;
         uint64_t page_virt = 0 + i;
 
-
-
     }
-
-
 
 }
 
+extern "C" {
 #include "basic/memchr.cpp"
 #include "basic/memcmp.cpp"
 #include "basic/memcpy.cpp"
 #include "basic/memmove.cpp"
 #include "basic/memset.cpp"
-
+}
 #ifndef stage2
-
-
 
 #endif
 

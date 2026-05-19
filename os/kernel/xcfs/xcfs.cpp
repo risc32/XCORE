@@ -31,8 +31,6 @@ struct filesystem {
         string ans = "";
         dispatcher::init();
 
-
-
         kout.clear();
         kout << WHITE << "XCore";
         kout << reset << " File System v2.1 XCFS " << (dispatcher::ismain ? "[boot disk]" : "") << endl << endl;

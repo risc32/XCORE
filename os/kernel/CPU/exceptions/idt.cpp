@@ -75,12 +75,9 @@ void init_idt64() {
     idt_ptr64.limit = sizeof(IDTEntry64) * 256 - 1;
     idt_ptr64.base = (uint64_t)&idt64;
 
-
     for (int i = 0; i < 256; i++) {
         set_idt_gate64(i, 0, 0x08, 0);
     }
-
-
 
     GATE(0);
     GATE(1);

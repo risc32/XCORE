@@ -5,10 +5,8 @@
 #include "../graphics/text/console.hpp"
 #include "restype.cpp"
 
-
 int memtest(TestResult *results) {
     int test_count = 0;
-
 
     results[test_count].test_name = "Basic allocation";
     auto t1 = allocate(64);
@@ -44,12 +42,6 @@ int memtest(TestResult *results) {
     }
     results[test_count++].passed = cmp;
     free(t7);
-
-
-
-
-
-
 
     results[test_count].test_name = "Different sizes work";
     auto t11 = allocate(1);

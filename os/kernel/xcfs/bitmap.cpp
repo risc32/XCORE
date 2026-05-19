@@ -44,7 +44,7 @@ struct dispatcher {
         csector = superblock.bitmap;
         changed = false;
         disk::read(csector, 1, cbitmap.data);
-        
+
         char bp[512] = {};
         for (int i = 0; i < superblock.bsize; i++) {
             disk::write(superblock.bitmap + i, bp);

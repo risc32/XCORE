@@ -47,26 +47,20 @@ struct disk {
     {
         if (data.size() == 0) return true;
 
-
         uint64_t start_lba = lba + (seek / 512);
         uint64_t offset_in_first = seek % 512;
         uint64_t bytes_remaining = data.size();
         uint64_t data_pos = 0;
 
-
         char sector_buffer[512];
-
 
         if (offset_in_first > 0) {
 
             read(start_lba, 1, sector_buffer);
 
-
             uint64_t bytes_to_write = min(bytes_remaining, 512 - offset_in_first);
 
-
             memcpy(sector_buffer + offset_in_first, data.data() + data_pos, bytes_to_write);
-
 
             if (!driver.write(start_lba, sector_buffer))
                 return false;
@@ -75,7 +69,6 @@ struct disk {
             bytes_remaining -= bytes_to_write;
             start_lba++;
         }
-
 
         while (bytes_remaining >= 512) {
             if (!driver.write(start_lba, data.data() + data_pos))
@@ -86,14 +79,11 @@ struct disk {
             start_lba++;
         }
 
-
         if (bytes_remaining > 0) {
 
             read(start_lba, 1, sector_buffer);
 
-
             memcpy(sector_buffer, data.data() + data_pos, bytes_remaining);
-
 
             if (!driver.write(start_lba, sector_buffer))
                 return false;

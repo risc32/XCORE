@@ -7,11 +7,7 @@ struct uuid_t;
 string to_string(uuid_t uuid);
 
 struct uuid_t {
-    union {
-        uint8_t  b[16];
-        uint32_t dw[4];
-        uint64_t qw[2];
-    };
+    uint8_t  b[16];
 
     string str() {
         return to_string(*this);
@@ -28,11 +24,7 @@ uuid_t uuid4() {
         out.b[i] = krand.random8();
     }
 
-
-
     out.b[6] = (out.b[6] & 0x0F) | UUID_VERSION_4;
-
-
 
     out.b[8] = (out.b[8] & 0x3F) | UUID_VARIANT_RFC;
     return out;

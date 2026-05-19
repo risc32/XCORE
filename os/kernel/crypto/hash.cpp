@@ -2,7 +2,6 @@
 
 namespace hash {
 
-
     uint64_t prime(const char* name) {
 
         const uint64_t P1 = 0x9E3779B97F4A7C15;
@@ -17,10 +16,8 @@ namespace hash {
             hash *= P2;
             hash += P3;
 
-
             hash = (hash >> 23) ^ (hash << 41);
         }
-
 
         hash ^= len * P3;
         hash ^= hash >> 29;
@@ -41,12 +38,10 @@ namespace hash {
         for (const char* p = name; *p; p++) {
             uint8_t c = *p;
 
-
             state[0] ^= c;
             state[1] += state[0];
             state[2] ^= state[1] << 17;
             state[3] += state[2] >> 13;
-
 
             uint64_t t = state[0] ^ (state[1] * 0x9E3779B9);
             state[0] = state[2] ^ (state[3] + t);
@@ -54,7 +49,6 @@ namespace hash {
             state[2] = t ^ (state[1] << 23);
             state[3] = t ^ (state[2] >> 47);
         }
-
 
         return state[0] ^ state[1] ^ state[2] ^ state[3];
     }

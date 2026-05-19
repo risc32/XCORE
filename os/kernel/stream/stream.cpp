@@ -216,13 +216,6 @@ public:
         return *this;
     }
 
-
-
-
-
-
-
-
 };
 
 class istream : public stream_base {

@@ -56,9 +56,10 @@ void generate_cpp_code(const char* varname,
     std::ofstream out(output_filename);
     if (!out) return;
 
-    out << "
+
     out << "#pragma once\n\n";
-    out << "const uint32_t " << varname << "_data["
+    out << "typedef unsigned int uint32_t; " << std::endl;
+    out << "extern const uint32_t " << varname << "_data["
         << (width * height) << "] = {\n";
 
     for (size_t i = 0; i < pixels.size(); ++i) {
@@ -69,8 +70,8 @@ void generate_cpp_code(const char* varname,
     }
 
     out << "\n};\n\n";
-    out << "const int " << varname << "_width = " << width << ";\n";
-    out << "const int " << varname << "_height = " << height << ";\n";
+    out << "extern const int " << varname << "_width = " << width << ";\n";
+    out << "extern const int " << varname << "_height = " << height << ";\n";
 
     out.close();
 }

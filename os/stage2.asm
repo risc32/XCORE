@@ -1,7 +1,6 @@
 format binary as 'img'
 use16
 
-
 stage2:
     mov ax, cs
     mov ds, ax

@@ -1,5 +1,6 @@
 #pragma once
 #include "../types/scalar.cpp"
+#include "../async/async.cpp"
 
 namespace HeapConfig {
     constexpr uint32_t MAGIC_HEADER = 0x414C4C4F;
@@ -18,8 +19,7 @@ struct AllocV2 {
         size_t size;
         MemoryBlock* next;
         uint32_t canary;
-        bool is_free;
-
+        volatile bool is_free;
 
         void* data() { return (void*)(this + 1); }
     };
@@ -41,11 +41,12 @@ private:
             panic("Buffer underflow (canary corrupted)");
     }
 
+    mutex mt{};
+
 public:
     void init(void* start, size_t total_size) {
         uintptr_t raw_addr = (uintptr_t)start;
         uintptr_t aligned_addr = align_up(raw_addr);
-
 
         if (total_size <= (aligned_addr - raw_addr) + sizeof(MemoryBlock)) return;
         total_size -= (aligned_addr - raw_addr);
@@ -56,7 +57,6 @@ public:
         head->is_free = true;
         head->next = nullptr;
 
-
         head->size = total_size - sizeof(MemoryBlock);
 
         heap_start_addr = (uint64_t)aligned_addr;
@@ -64,6 +64,7 @@ public:
     }
 
     void* malloc(size_t size) {
+        lock_guard guard{mt};
         if (size == 0) return nullptr;
         size = align_up(size);
 
@@ -72,23 +73,18 @@ public:
             if (curr->is_free && curr->size >= size) {
                 validate_block(curr);
 
-
-
                 size_t min_split_size = sizeof(MemoryBlock) + HeapConfig::ALIGNMENT;
 
                 if (curr->size >= size + min_split_size) {
 
-
                     uint8_t* next_block_addr = (uint8_t*)curr->data() + size;
                     MemoryBlock* next_block = (MemoryBlock*)next_block_addr;
-
 
                     next_block->size = curr->size - size - sizeof(MemoryBlock);
                     next_block->magic = HeapConfig::MAGIC_HEADER;
                     next_block->canary = HeapConfig::CANARY;
                     next_block->is_free = true;
                     next_block->next = curr->next;
-
 
                     curr->size = size;
                     curr->next = next_block;
@@ -103,8 +99,9 @@ public:
     }
 
     void free(void* ptr) {
-        if (!ptr) return;
+        lock_guard guard{mt};
 
+        if (!ptr) return;
 
         if ((uintptr_t)ptr < heap_start_addr || (uintptr_t)ptr >= heap_end_addr)
             panic("Pointer outside the heap boundaries");
@@ -120,20 +117,16 @@ public:
 #endif
         block->is_free = true;
 
-
         MemoryBlock* curr = head;
         while (curr && curr->next) {
             if (curr->is_free && curr->next->is_free) {
-
 
                 uintptr_t next_addr = (uintptr_t)curr->next;
                 uintptr_t curr_end = (uintptr_t)curr->data() + curr->size;
                 size_t gap = next_addr - curr_end;
 
-
                 curr->size += gap + sizeof(MemoryBlock) + curr->next->size;
                 curr->next = curr->next->next;
-
 
             } else {
                 curr = curr->next;
@@ -142,6 +135,8 @@ public:
     }
 
     void* realloc(void* ptr, size_t size) {
+        lock_guard guard{mt};
+
         if (!ptr) return malloc(size);
         if (size == 0) { free(ptr); return nullptr; }
 
@@ -150,9 +145,7 @@ public:
 
         size = align_up(size);
 
-
         if (block->size >= size) return ptr;
-
 
         void* new_ptr = malloc(size);
         if (new_ptr) {

@@ -59,3 +59,5 @@ template<typename T> managed<char> bytestream(T arg) {
     }
     return out;
 }
+
+#include "basealloc.cpp"

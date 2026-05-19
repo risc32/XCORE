@@ -6,27 +6,14 @@
 
 #include "gfxtypes.cpp"
 
-
-
-
-
-
-
-
-
-
-
-
 struct biosgraph {
     static GraphicsInfo* gfx;
-
 
     static void setup() {
 
     }
 
     void set_vbe_bank(uint16_t bank) {
-
 
     }
 

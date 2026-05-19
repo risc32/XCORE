@@ -20,11 +20,9 @@ struct fragment {
     static void write(managed<indirect> frag, int64_t seek, const managed<char> &data, linkednode linked) {
         if (data.size() == 0) return;
 
-
         if (seek == -1) {
             seek = getsize(frag);
         }
-
 
         if (seek < 0) {
             panic("Negative seek position after -1 expansion");
@@ -38,17 +36,14 @@ struct fragment {
         for (auto &indir: frag) {
             uint64_t block_size = indir.blocks * 512;
 
-
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
-
             uint64_t block_offset = current_seek % 512;
             uint64_t start_block = current_seek / 512;
             uint64_t bytes_available = block_size - current_seek;
-
 
             uint64_t bytes_to_write = min(bytes_remaining, bytes_available);
 
@@ -60,7 +55,6 @@ struct fragment {
                 } else {
 
                     uint64_t written = 0;
-
 
                     if (block_offset > 0) {
                         char sector_buffer[512];
@@ -74,14 +68,12 @@ struct fragment {
                         start_block++;
                     }
 
-
                     while (bytes_to_write - written >= 512) {
                         disk::write(indir.start + start_block,
                                     d + data_pos + written);
                         written += 512;
                         start_block++;
                     }
-
 
                     if (bytes_to_write - written > 0) {
                         char sector_buffer[512];
@@ -111,7 +103,6 @@ struct fragment {
 
         uint64_t total_size = getsize(frag);
 
-
         if (seek == -1) {
             if (size > total_size) {
                 seek = 0;
@@ -120,13 +111,11 @@ struct fragment {
             }
         }
 
-
         if (seek < 0 || static_cast<uint64_t>(seek) >= total_size) {
             return managed<char>();
         }
 
         uint64_t u_seek = static_cast<uint64_t>(seek);
-
 
         if (u_seek + size > total_size) {
             size = total_size - u_seek;
@@ -141,17 +130,14 @@ struct fragment {
         for (auto &ind: frag) {
             uint64_t block_size = ind.blocks * 512;
 
-
             if (current_seek >= block_size) {
                 current_seek -= block_size;
                 continue;
             }
 
-
             uint64_t block_offset = current_seek % 512;
             uint64_t start_block = current_seek / 512;
             uint64_t bytes_available = block_size - current_seek;
-
 
             uint64_t bytes_to_read = min(bytes_remaining, bytes_available);
 
@@ -164,7 +150,6 @@ struct fragment {
 
                     uint64_t read = 0;
 
-
                     if (block_offset > 0) {
                         char sector_buffer[512];
                         disk::read(ind.start + start_block, 1, sector_buffer);
@@ -176,7 +161,6 @@ struct fragment {
                         start_block++;
                     }
 
-
                     if (bytes_to_read - read >= 512) {
                         uint64_t full_blocks = (bytes_to_read - read) / 512;
                         disk::read(ind.start + start_block, full_blocks,
@@ -184,7 +168,6 @@ struct fragment {
                         read += full_blocks * 512;
                         start_block += full_blocks;
                     }
-
 
                     if (bytes_to_read - read > 0) {
                         char sector_buffer[512];

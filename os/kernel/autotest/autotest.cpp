@@ -33,7 +33,6 @@ void autotest() {
     unsigned short cbuf[4000] = {};
     Console console = Console();
 
-
     console.writeLine("KERNEL PANIC\n", true);
     console.writeLine("AUTOTEST FAILED", true);
     TestResult resbuf[20] = {};

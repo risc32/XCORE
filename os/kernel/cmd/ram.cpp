@@ -15,27 +15,7 @@ int ram(const managed<string>& args) {
 
     if (com == "info") {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     } else if (com == "showfree") {
-
-
-
-
-
-
-
 
     } else if (com == "get") {
         CHECK(2)
@@ -81,8 +61,6 @@ int ram(const managed<string>& args) {
 
         char* start = ((char*)to_int(args[1], 16));
         memcpy(start, args[2].data(), args[2].size());
-
-
 
     } else if (com == "snap") {
         CHECK(2)

@@ -5,8 +5,13 @@
 
 #include "../../debug/debug.cpp"
 
-extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
+struct mut {
+    static mutex m;
+};
+mutex mut::m{};
 
+extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
+    lock_guard lock(mut::m);
 
     s0::put(exception::messages[int_no]);
     s0::put(" #");
@@ -14,9 +19,6 @@ extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
     s0::put("\n\r");
 
     Console console;
-
-
-
 
     registers_t regs = {};
     get_basic_registers(&regs);
@@ -53,7 +55,6 @@ extern "C" void universal_fault_handler(uint64_t int_no, uint64_t err_code) {
 
 extern "C" void isr_common_stub();
 
-
 #define DECLARE_ISR_NOERRCODE(num) \
     extern "C" void isr##num() { \
         universal_fault_handler(num, 0);\
@@ -63,7 +64,6 @@ extern "C" void isr_common_stub();
     extern "C" void isr##num() { \
         universal_fault_handler(num, 0);\
     }
-
 
 DECLARE_ISR_NOERRCODE(0)
 DECLARE_ISR_NOERRCODE(1)

@@ -8,13 +8,12 @@
 #define splcacheKB 16
 #define splcache (splcacheKB*1024)
 
-
 #define splccblocks (splcache / splpixels)
 
 struct HeatUnit;
 
 struct Splame {
-    alignas(16) static __uint128_t map[splamecount];
+    alignas(16) static volatile __uint128_t map[splamecount];
     alignas(16) static HeatUnit units[splamecount];
     alignas(16) static uint8_t result[splamecount];
     static uint8_t factor;
@@ -24,23 +23,6 @@ struct Splame {
 
     static void measure() {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     static void prefetch(int index, _co_uint24_t* addr) {
@@ -49,7 +31,7 @@ struct Splame {
     }
 };
 
-alignas(16) __uint128_t Splame::map[splamecount] = {};
+alignas(16) volatile __uint128_t Splame::map[splamecount] = {};
 
 struct HeatUnit {
     short index;

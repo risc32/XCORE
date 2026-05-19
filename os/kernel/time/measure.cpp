@@ -3,13 +3,11 @@
 #include "../utils/utils.cpp"
 #include "../CPU/cpu.cpp"
 
-
 class Timer {
 private:
     uint64_t start_ticks;
     uint64_t end_ticks;
     bool running;
-
 
     static inline uint64_t rdtsc() {
         uint32_t lo, hi;
@@ -19,7 +17,6 @@ private:
                 );
         return ((uint64_t)hi << 32) | lo;
     }
-
 
     static inline uint64_t rdtscp() {
         uint32_t lo, hi, aux;
@@ -33,7 +30,6 @@ private:
 public:
     Timer() : start_ticks(0), end_ticks(0), running(false) {}
 
-
     void start(bool precise = false) {
         if (precise) {
 
@@ -44,7 +40,6 @@ public:
         }
         running = true;
     }
-
 
     void stop() {
         if (!running) return;
@@ -58,7 +53,6 @@ public:
         running = false;
     }
 
-
     uint64_t elapsed_ticks() const {
         if (running) {
             return rdtsc() - start_ticks;
@@ -66,28 +60,23 @@ public:
         return end_ticks - start_ticks;
     }
 
-
     double elapsed_ns() const {
 
         const double cpu_ghz = 2.5;
         return elapsed_ticks() / cpu_ghz;
     }
 
-
     double elapsed_us() const {
         return elapsed_ns() / 1000.0;
     }
-
 
     double elapsed_ms() const {
         return elapsed_us() / 1000.0;
     }
 
-
     double elapsed_seconds() const {
         return elapsed_ms() / 1000.0;
     }
-
 
     class ScopedTimer {
     private:
@@ -107,7 +96,6 @@ public:
         }
     };
 };
-
 
 #define TIME_BLOCK(name) \
     Timer __timer_##__LINE__; \

@@ -5,11 +5,9 @@ class Random {
     uint8_t  buffer[64];
     int      pos;
 
-
     static inline uint32_t rotl(uint32_t x, int n) {
         return (x << n) | (x >> (32 - n));
     }
-
 
     void quarter_round(uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d) {
         a += b; d ^= a; d = rotl(d, 16);
@@ -17,7 +15,6 @@ class Random {
         a += b; d ^= a; d = rotl(d, 8);
         c += d; b ^= c; b = rotl(b, 7);
     }
-
 
     void next_block() {
         uint32_t x[16];
@@ -53,13 +50,11 @@ class Random {
         pos = 0;
     }
 
-
     bool rdrand_available() {
         uint32_t eax, ebx, ecx, edx;
         __asm__ volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(1));
         return (ecx >> 30) & 1;
     }
-
 
     bool rdrand32(uint32_t* val) {
         unsigned char ok;
@@ -70,17 +65,13 @@ class Random {
 public:
     static void init();
 
-
-
     Random() {
         pos = 64;
-
 
         state[0] = 0x61707865;
         state[1] = 0x3320646e;
         state[2] = 0x79622d32;
         state[3] = 0x6b206574;
-
 
         state[12] = 0;
 
@@ -104,9 +95,6 @@ public:
         }
     }
 
-
-
-
     Random(const uint32_t key[8], const uint32_t nonce[3]) {
 
         state[0] = 0x61707865;
@@ -114,12 +102,9 @@ public:
         state[2] = 0x79622d32;
         state[3] = 0x6b206574;
 
-
         for (int i = 0; i < 8; i++) state[4 + i] = key[i];
 
-
         state[12] = 0;
-
 
         state[13] = nonce[0];
         state[14] = nonce[1];
@@ -127,9 +112,6 @@ public:
 
         pos = 64;
     }
-
-
-
 
     void seed(const uint32_t key[8], const uint32_t nonce[3]) {
 
@@ -138,12 +120,9 @@ public:
         state[2] = 0x79622d32;
         state[3] = 0x6b206574;
 
-
         for (int i = 0; i < 8; i++) state[4 + i] = key[i];
 
-
         state[12] = 0;
-
 
         state[13] = nonce[0];
         state[14] = nonce[1];
@@ -151,9 +130,6 @@ public:
 
         pos = 64;
     }
-
-
-
 
     __int128 random128() {
         __int128 res = 0;
@@ -169,18 +145,12 @@ public:
         return res;
     }
 
-
-
-
     uint64_t random64() {
         if (pos >= 64) next_block();
         uint64_t val = *(uint64_t*)(buffer + pos);
         pos += 8;
         return val;
     }
-
-
-
 
     uint32_t random32() {
         if (pos >= 64) next_block();
@@ -189,18 +159,12 @@ public:
         return val;
     }
 
-
-
-
     uint16_t random16() {
         if (pos >= 64) next_block();
         uint16_t val = *(uint16_t*)(buffer + pos);
         pos += 2;
         return val;
     }
-
-
-
 
     uint8_t random8() {
         if (pos >= 64) next_block();

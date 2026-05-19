@@ -54,10 +54,8 @@ struct _workersetc {
 class KernelOut : public ostream {
 protected:
 
-
     void _flush() override {
         _kcons::console.write(buffer.data(), true);
-
 
     }
 public:
@@ -90,7 +88,6 @@ public:
     }
 
     void clear() override {
-
 
         _kcons::console.clear();
         buffer.clear();

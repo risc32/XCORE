@@ -1,4 +1,9 @@
 set osabi none
+set pagination off
+set confirm off
+
+set debug remote 1
+set remote verbose-resume-packet off
 file build/kernel.elf
 python
 import gdb.printing

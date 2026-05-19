@@ -2,7 +2,6 @@
 
 #include "../utils/utils.cpp"
 
-
 #define MSR_EFER        0xC0000080
 #define MSR_STAR        0xC0000081
 #define MSR_LSTAR       0xC0000082
@@ -12,12 +11,10 @@
 #define MSR_GS_BASE     0xC0000101
 #define MSR_KERNEL_GS_BASE 0xC0000102
 
-
 #define EFER_SCE        (1 << 0)
 #define EFER_LME        (1 << 8)
 #define EFER_LMA        (1 << 10)
 #define EFER_NXE        (1 << 11)
-
 
 static inline uint64_t rdmsr(uint32_t msr) {
     uint32_t low, high;
@@ -30,7 +27,6 @@ static inline void wrmsr(uint32_t msr, uint64_t value) {
     uint32_t high = (uint32_t)(value >> 32);
     asm volatile("wrmsr" : : "c"(msr), "a"(low), "d"(high));
 }
-
 
 static inline uint16_t get_cs(void) {
     uint16_t seg;

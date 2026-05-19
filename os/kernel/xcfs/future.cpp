@@ -19,8 +19,6 @@ enum OpenMode {
     append = 1 << 2
 };
 
-
-
 struct futurefilesystem {
     static bool mounted;
     static super_block& superblock;
@@ -42,8 +40,6 @@ struct futurefilesystem {
 
         string ans = "";
         dispatcher::init();
-
-
 
         kout.clear();
         kout << WHITE << "XCore";
@@ -205,18 +201,14 @@ void filesystem::remove_dir(string path) {
         panic("Not a directory");
     }
 
-
     if (!Directory::is_empty(target.ind)) {
         panic("Directory not empty");
     }
 
-
     inode parent;
     disk::read(target.sector, 1, parent.data);
 
-
     Directory::remove_entry(parent, getfname(path));
-
 
     for (auto& frag : target.ind.fragments) {
         if (frag.blocks > 0) {
@@ -224,9 +216,7 @@ void filesystem::remove_dir(string path) {
         }
     }
 
-
     dispatcher::set(target.ind.index, false);
-
 
     disk::write(parent.index, parent.data);
 }

@@ -18,15 +18,12 @@ static void entry(void) {
         "mov [gs:0x10], rsp\n\t"
         "mov rsp, 0x170000\n\t"
 
-
         "push rbp\n\t"
         "mov rbp, rsp\n\t"
         "sub rsp, 16\n\t"
 
-
         "push rcx\n\t"
         "push r11\n\t"
-
 
         "push rax\n\t"
         "push rdx\n\t"
@@ -41,20 +38,13 @@ static void entry(void) {
         "push r14\n\t"
         "push r15\n\t"
 
-
         "mov ax, 0x10\n\t"
         "mov ds, ax\n\t"
         "mov es, ax\n\t"
 
-
-
         "mov rdi, rsp\n\t"
 
-
         "call syscall_handler\n\t"
-
-
-
 
         "pop r15\n\t"
         "pop r14\n\t"
@@ -69,16 +59,13 @@ static void entry(void) {
         "pop rdx\n\t"
         "pop rax\n\t"
 
-
         "pop r11\n\t"
         "pop rcx\n\t"
-
 
         "mov rsp, rbp\n\t"
         "pop rbp\n\t"
         "swapgs\n\t"
         "mov rsp, [gs:0x10]\n\t"
-
 
         "sysretq\n\t"
 
@@ -103,7 +90,6 @@ extern "C" uint64_t syscall_handler(registers_t *regs) {
     }
 
     get_all_registers(regs);
-
 
     return scalls[nr](regs);
 }

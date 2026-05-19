@@ -27,7 +27,6 @@ struct PageHeap {
                     continue;
                 }
 
-
                 usedmap[i] |= (1 << j);
                 size_t page_index = i * PAGES_PER_BYTE + j;
                 return &heap[page_index * PAGESIZE];
@@ -39,7 +38,6 @@ struct PageHeap {
     static void free(void* ptr) {
         if (!ptr) return;
 
-
         uintptr_t heap_start = (uintptr_t)&heap[0];
         uintptr_t heap_end = heap_start + PHSIZE;
         uintptr_t ptr_addr = (uintptr_t)ptr;
@@ -49,14 +47,11 @@ struct PageHeap {
             return;
         }
 
-
         size_t page_index = (ptr_addr - heap_start) / PAGESIZE;
         size_t map_index = page_index / PAGES_PER_BYTE;
         size_t bit_index = page_index % PAGES_PER_BYTE;
 
-
         usedmap[map_index] &= ~(1 << bit_index);
-
 
         memset(ptr, 0, PAGESIZE);
     }

@@ -5,7 +5,6 @@
 bool ssesupp() {
     uint32_t eax, ebx, ecx, edx;
 
-
     asm volatile("cpuid"
             : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
             : "a"(1));
@@ -19,7 +18,6 @@ bool avxsupp() {
     asm volatile("cpuid"
             : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
             : "a"(1));
-
 
     return ((ecx >> 27) & 1) && ((ecx >> 28) & 1) && ((ecx >> 20) & 1);
 }

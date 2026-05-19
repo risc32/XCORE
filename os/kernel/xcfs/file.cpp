@@ -32,10 +32,8 @@ public:
             case write: {
                 if (filesystem::exists(filename)) {
 
-
                 }
                 else {
-
 
                 }
                 break;
@@ -52,6 +50,5 @@ public:
             default: ;
         }
     }
-
 
 };

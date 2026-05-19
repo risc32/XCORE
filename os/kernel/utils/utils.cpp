@@ -3,7 +3,6 @@
 #include "itoa.cpp"
 #include "../types/types.cpp"
 
-
 #include "atoi.cpp"
 #ifndef stage2
 
@@ -41,3 +40,10 @@ constexpr T align_up(T value, T alignment) {
 constexpr uint64_t align_up(uint64_t value, uint64_t alignment) {
     return (value + alignment - 1) & ~(alignment - 1);
 }
+
+template <typename A, typename B>
+struct pair {
+    A first;
+    B second;
+};
+

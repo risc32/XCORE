@@ -47,3 +47,6 @@ struct pair {
     B second;
 };
 
+
+#define GLOBAL(type, var) struct _g_##type{static type* var; static char buf[sizeof(type)]; static void init() {var = new (buf) type;} static type* get() {if (!var) {var = new (buf) type;} return var;}}; type* _g_##type::var = (type*)_g_##type::buf; char _g_##type::buf[sizeof(type)]{}; auto var = *_g_##type::get();
+#define INIT(type, var) _g_##type::init();

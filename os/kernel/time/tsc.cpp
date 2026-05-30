@@ -25,9 +25,7 @@ uint64_t get_tsc_freq(void) {
         while ((inb(0x40) & 0x80) == 0);
     }
     uint64_t end = rdtsc();
-    //stop();
 
-    //__asm__ volatile ("sti");
 
     return (end - start) * 100;
 }

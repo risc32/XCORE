@@ -12,11 +12,9 @@ struct mutex {
                 return;
             }
 
-            //asm volatile("pause");
 
             while (_lock.load() != 0) {
-                //asm volatile("pause");
-            }
+                            }
         }
     }
 

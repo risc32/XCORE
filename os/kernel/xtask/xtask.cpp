@@ -1,6 +1,5 @@
 #pragma once
 
-#include "syscall.cpp"
 #include "../crypto/crypto.cpp"
 #include "../time/time.cpp"
 #include "const.cpp"
@@ -12,6 +11,17 @@ namespace xtask {
     struct Task;
     struct Process;
 
+    struct gstable {
+        void* kstack_back = malloc(16384);
+        void* kstack = (char*)kstack_back + 16384;
+
+        void* ustack = nullptr;
+
+        ~gstable() {
+            free(kstack_back);
+        }
+    };
+
     struct Core {
         uuid_t uuid;
         int id;
@@ -19,6 +29,9 @@ namespace xtask {
         bool tasked;
         volatile uint32_t* lapic_base;
         mutex mt;
+        tss64 tss;
+        bool present = true;
+                gstable gs;
 
         void lock() {
             mt.lock();
@@ -28,8 +41,13 @@ namespace xtask {
         }
     };
 
-    managed<Core> cores;
-
+    Core cores[16];
+}
+namespace cores {
+    xtask::Core* find_best();
+}
+[[noreturn]] void update();
+namespace xtask {
     static inline volatile uint32_t* get_lapic() {
         return (volatile uint32_t*)0xFEE00000;
     }
@@ -44,7 +62,10 @@ namespace xtask {
 
     __attribute__((naked)) void tick() {
         asm volatile(
-            //"cli\n"
+            "cli\n"
+
+            "push %fs\n"
+            "push %gs\n"
 
             "push %rax\n"
             "push %rcx\n"
@@ -62,17 +83,11 @@ namespace xtask {
             "push %r14\n"
             "push %r15\n"
 
-            "push %fs\n"
-            "push %gs\n"
-
             "mov $0xFEE000B0, %rax\n"
             "movl $0, (%rax)\n"
 
             "mov %rsp, %rdi\n"
             "call sched\n"
-
-            "pop %gs\n"
-            "pop %fs\n"
 
             "pop %r15\n"
             "pop %r14\n"
@@ -88,20 +103,23 @@ namespace xtask {
             "pop %rbx\n"
             "pop %rdx\n"
             "pop %rcx\n"
-            "pop %rax\n"
-
             "mov $0x10, %ax\n"
             "mov %ax, %ds\n"
             "mov %ax, %es\n"
-            "mov %ax, %fs\n"
-            "mov %ax, %gs\n"
+            "pop %rax\n"
+
+            "pop %gs\n"
+            "pop %fs\n"
+
 
             "iretq\n"
         );
     }
     void sf_entry() {
-        //set_idt_gate64(32, (uint64_t)tick, 0x08, 0x8E);
-        //sti();
+        uint64_t cr4;
+        __asm__ volatile ("mov %%cr4, %0" : "=r"(cr4));
+        cr4 |= (1 << 18);
+        __asm__ volatile ("mov %0, %%cr4" : : "r"(cr4));
     }
 
     struct mut {
@@ -112,7 +130,7 @@ namespace xtask {
     struct alignas(16) context_t {
         uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
         uint64_t rdi, rsi, rbp, rbx, rdx, rcx, rax;
-        uint64_t fs, gs;
+        uint64_t gs, fs;
         uint64_t rip, cs, rflags, rsp, ss;
     } __attribute__((packed));
 
@@ -166,35 +184,59 @@ namespace xtask {
         wrmsr(0x1B, apic_base);
     }
 
+    void init_tss() {
+        int core_id = smplow::get_core_id();
+        static uint8_t boot_stacks[16][4096];
+        uint64_t stack_top = (uint64_t)boot_stacks[core_id] + 4096;
+        gdt_init_tss();
+        cores[core_id].tss.rsp0 = stack_top;
+        cores[core_id].tss.iomap_base = sizeof(tss64);
+
+        gdt_init();
+                                            }
+
+    void syscalls();
+
     void init_per_cpu() {
+        init_tss();
+
         init_lapic_per_cpu();
         sf_entry();
+        syscalls();
     }
+    Process* runfunc0(void (*func)(), Core* core = cores::find_best());
 
     void init_bsp() {
-
         s0::put("BSP initializing...\n");
         Core c = {};
         c.tasks = {};
         c.lapic_base = get_lapic();
         c.uuid = uuid4();
         c.id = 0;
-        cores.push_back(c);
+        cores[0] = c;
+
         disable_pic();
         enable_apic_mode();
         for (int i = 0; i < 1000; i++) {
             asm volatile("pause");
         }
-        set_idt_gate64(32, (uint64_t)tick, 0x08, 0x8E);
+        set_idt_gate64(32, (uint64_t)tick, 0x08, 0xEE);
+        load_gdt((uint64_t)&gdt_ptr);
+        gdt_init();
+        init_tss();
+        runfunc0(update, cores);
+
         s0::put("BSP initialized\n");
     }
 
     void core_init() {
         if (smplow::get_core_id() == 0) {
-
             init_bsp();
+        } else {
+            load_gdt((uint64_t)&gdt_ptr);
         }
         init_per_cpu();
+
     }
 
     struct alignas(16) stack {
@@ -204,12 +246,15 @@ namespace xtask {
     char stack::stacks[17][1024*16]{};
 
     void entry(int core_id) {
+
         Core c = {};
         c.tasks = {};
         c.lapic_base = get_lapic();
         c.uuid = uuid4();
         c.id = core_id;
-        cores.push_back(c);
+        cores[core_id] = c;
+
+        runfunc0(update, cores+core_id);
     }
 
     void setup() {
@@ -240,20 +285,18 @@ namespace xtask {
 
         core_init();
 
-        //c.lapic_base = get_lapic();
-        //c.tasks = {};
-        //c.uuid = uuid4();
-        //cores.push_back(c);
-        //
+                                        //
         s0::put("Core ");
         s0::put(smplow::get_core_id());
         s0::put(" ready, waiting for interrupts...\n");
         mut::m.unlock();
-        sti();
         entry(smplow::get_core_id());
+        sti();
+
         stop();
     }
 }
 
 #include "cores.cpp"
 #include "process.cpp"
+#include "syscall.cpp"

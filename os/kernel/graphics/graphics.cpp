@@ -121,8 +121,7 @@ struct Screen {
 
     static void clear(uint32_t color = 0x00000000, GraphicsInfo inf = buffer) {
         if (color%0x111111 == 0) {
-            //__builtin_memset(inf.fb32, color, size);
-        }  if (inf.is24bpp()) {
+                    }  if (inf.is24bpp()) {
             iclear24(inf, uint24(color));
         } else {
             iclear32(inf, color);
@@ -167,7 +166,7 @@ struct Screen {
 
                 if (Splame::map[i] & 1) {
 #ifdef showmap
-                    _imemset_spec24(dst + i * splpixels, gray, splpixels);
+                    _imemset_spec32(dst + i * splpixels, gray, splpixels);
 #else
                     __builtin_memcpy(dst + i * splpixels, src + i * splpixels, splpixels * 4);
 #endif

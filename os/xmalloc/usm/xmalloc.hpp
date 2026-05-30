@@ -1,6 +1,5 @@
 #ifndef ALLPOOLS
 
-//#define BAREMETAL
 #define ALLPOOLS 64
 
 #if not defined(size_t) or defined(BAREMETAL)

@@ -45,8 +45,6 @@ namespace x16G {
         int x = x0;
         int y = y0;
 
-        //_idraw_aa(x1_screen--, y1_screen--, color);
-        //_idraw_aa(x--, y--, color);
 
         while (true) {
             _idraw_aa(x, y, color);

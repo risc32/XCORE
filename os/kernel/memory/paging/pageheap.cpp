@@ -32,7 +32,7 @@ struct PageHeap {
                 return &heap[page_index * PAGESIZE];
             }
         }
-        return nullptr;
+        return malloc(PAGESIZE);
     }
 
     static void free(void* ptr) {
@@ -43,7 +43,7 @@ struct PageHeap {
         uintptr_t ptr_addr = (uintptr_t)ptr;
 
         if (ptr_addr < heap_start || ptr_addr >= heap_end) {
-
+            free(ptr);
             return;
         }
 
@@ -59,3 +59,4 @@ struct PageHeap {
 
 alignas(4096) unsigned char PageHeap::heap[PHSIZE] = {};
 unsigned char PageHeap::usedmap[PHSIZE/PAGESIZE/PAGES_PER_BYTE] = {};
+

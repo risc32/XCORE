@@ -127,8 +127,6 @@ struct atomic {
         return *this;
     }
 
-    //atomic(const atomic&) = delete;
-    //atomic& operator=(const atomic&) = delete;
 
     T load() const {
         return atomic_load(&_val);

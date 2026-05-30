@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utils/utils.cpp"
+#include "ports.cpp"
 
 #define MSR_EFER        0xC0000080
 #define MSR_STAR        0xC0000081
@@ -63,7 +64,11 @@ static inline uint16_t get_gs(void) {
     asm volatile("mov %%gs, %0" : "=rm"(seg));
     return seg;
 }
-
 static inline void load_tr(uint16_t sel) {
+
     asm volatile("ltr %0" : : "r"(sel));
+    }
+
+static inline void load_gdt(uint64_t addr) {
+    asm volatile("lgdt (%0)" : : "r"(addr));
 }

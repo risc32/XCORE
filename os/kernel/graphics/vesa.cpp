@@ -155,6 +155,7 @@ struct VESADriver {
         Screen::buffer.framebuffer = (uint64_t*)malloc(Screen::size);
 
         fullinfo = *vbe;
+        paging::map_range_identity(Screen::info.fbdat, Screen::size);
 
         Screen::init();
 

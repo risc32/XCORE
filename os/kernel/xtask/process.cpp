@@ -2,6 +2,7 @@
 
 #include "xtask.cpp"
 #include "stack.cpp"
+#include "usermem.cpp"
 
 namespace xtask {
     enum State {
@@ -16,8 +17,8 @@ namespace xtask {
         int tid;
         State s;
         context_t context;
-        //interrupt_frame frame;
-        uint8_t fpu_state[512] __attribute__((aligned(16)));
+        void* krtop;
+                uint8_t fpu_state[4096] __attribute__((aligned(16)));
     };
 
     struct Process {
@@ -32,15 +33,30 @@ namespace xtask {
     uint64_t pcounter;
 
     void init() {
-        cores = {};
         procmut = {};
         pcounter = 0;
     }
 
-    Process* newprocess(const interrupt_frame &frame) {
-        Core* core = cores::find_best();
+    extern "C" void sched(context_t* regs);
+
+    void exit_task() {
+        Core& core = cores[smplow::get_core_id()];
+        core.lock();
+        Task* t = core.tasks.current();
+        t->s = DEAD;
+                core.unlock();
+        stop();
+            }
+
+    extern "C" void task_wrapper(void (*func)()) {
+                                                func();
+        exit_task();
+    }
+
+    Process* newprocess(const interrupt_frame &frame, Core* core = cores::find_best()) {
         core->lock();
 
+        uint64_t stack_size = 16384;
         Process* proc = new Process{
             .pid = pcounter++,
             .tcounter = 1,
@@ -51,17 +67,18 @@ namespace xtask {
             .tid = 0,
             .s = NEW,
             .context = {
+                .rdi = frame.ip,
                 .rbp = 0,
-                .fs = 0x10,
                 .gs = 0x10,
-                .rip = frame.ip,
+                .fs = 0x10,
+                .rip = (uint64_t)task_wrapper,
                 .cs = (uint16_t)frame.cs,
                 .rflags = frame.flags,
                 .rsp = frame.sp,
                 .ss = (uint16_t)frame.ss,
             },
-            //.frame = frame,
-            .fpu_state = {}
+            .krtop = (char*)promise(stack_size) + stack_size,
+                        .fpu_state = {}
         });
         core->tasks.push_back(proc->tasks[0]);
         core->unlock();
@@ -69,54 +86,51 @@ namespace xtask {
         return proc;
     }
 
-    Process* runf(void (*func)()) {
+    Process* runfunc0(void (*func)(), Core* core) {
         return newprocess({
             .ip = (uint64_t)func,
             .cs = 0x08,
             .flags = 0x202,
-            .sp = (uint64_t)promise(64*1024)+64*1024,
+            .sp = (uint64_t)promise(64*1024 + 128 + 16)+64*1024 - 8,
             .ss = 0x10,
-        });
+        }, core);
+    }
+
+    Process* runfunc3(void (*func)(), Core* core = cores::find_best()) {
+        return newprocess({
+            .ip = (uint64_t)func,
+            .cs = 0x1B,
+            .flags = 0x202,
+            .sp = (uint64_t)promise(64*1024 + 128 + 16)+64*1024 - 8,
+            .ss = 0x23,
+        }, core);
     }
 
     extern "C" void sched(context_t* regs) {
         Core& core = cores[smplow::get_core_id()];
         core.lock();
 
+
         if (core.tasks.empty()) {
             core.unlock();
             return;
         }
 
-        Task* prev = core.tasks.current();
-        if (core.tasked) {
-            prev->context = *regs;
-            prev->s = READY;
-        } else {
-            core.tasked = true;
-        }
-
-        uint64_t cr0;
-        asm volatile("mov %%cr0, %0" : "=r"(cr0));
-        if (cr0 & 8) asm volatile("clts");
-        asm volatile("fxsave %0" : "=m"(prev->fpu_state));
-
+        Task* current = core.tasks.current();
         Task* next = core.tasks.next();
-
-        if (next->s == NEW) {
-            asm volatile("fninit");
-            memset(next->fpu_state, 0, 512);
-            asm volatile("fxsave %0" : "=m"(next->fpu_state));
+                if (core.tasked && current != next) {
+            current->context = *regs;
+            fxsave(current->fpu_state);
         }
+        current->s = READY;
         next->s = RUNNING;
-        asm volatile("fxrstor %0" : : "m"(next->fpu_state));
+        fxrstor(next->fpu_state);
 
+        core.tss.rsp0 = (uint64_t)next->krtop;
+        core.tasked = true;
         core.unlock();
         asm volatile(
             "mov %0, %%rsp\n"
-
-            "pop %%gs\n"
-            "pop %%fs\n"
 
             "pop %%r15\n"
             "pop %%r14\n"
@@ -132,17 +146,21 @@ namespace xtask {
             "pop %%rbx\n"
             "pop %%rdx\n"
             "pop %%rcx\n"
-            "pop %%rax\n"
-
             "mov $0x10, %%ax\n"
             "mov %%ax, %%ds\n"
             "mov %%ax, %%es\n"
+            "pop %%rax\n"
+
+            "pop %%gs\n"
+            "pop %%fs\n"
+
 
             "iretq\n"
             :
             : "r"(&next->context)
             : "memory"
         );
+
 
         while(1) asm volatile("hlt");
     }

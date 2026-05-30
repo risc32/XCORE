@@ -73,20 +73,18 @@ __attribute__((optimize(3))) void _imemset_spec24(_co_uint24_t* dest, _co_uint24
 
 __attribute__((optimize(3))) void _imemset_spec32(uint32_t* dest, uint32_t color, uint32_t count) {
     *dest = color;
-
     if (count > 1) {
         int filled = 1;
         while (filled * 2 <= count) {
-            memcpy((char*)dest + filled * 3,
+            memcpy((char*)dest + filled * 4,
                        (char*)dest,
-                       filled * 3);
+                       filled * 4);
             filled *= 2;
         }
-
         if (filled < count) {
-            memcpy((char*)dest + filled * 3,
+            memcpy((char*)dest + filled * 4,
                        (char*)dest,
-                       (count - filled) * 3);
+                       (count - filled) * 4);
         }
     }
 }

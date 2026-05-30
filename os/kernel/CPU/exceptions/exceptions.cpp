@@ -44,8 +44,11 @@ extern "C" void debug_trap() {
 
 struct PanicContext {
     bool halt = true;
+    int errcode = 0;
+    const char* func = "";
+    const char* message = "";
+    bool has_err = false;
 
-    void (*func)(int, const char *, const char*) = nullfunc;
 
     static void nullfunc(int, const char *, const char*){}
 
@@ -75,15 +78,21 @@ struct Exceptions {
     }
 
     void func(int error_code, const char* func, const char *message) {
-        catchers.peek().func(error_code, func, message);
+        catchers.peek().errcode = error_code;
+        catchers.peek().func = func;
+        catchers.peek().message = message;
+        catchers.peek().has_err = true;
     }
 } _globctx;
+mutex _globcmut;
 
 void setcatch(PanicContext ctx) {
+    lock_guard {_globcmut};
     _globctx.setcatch(ctx);
 }
 
 void delcatch() {
+    lock_guard {_globcmut};
     _globctx.delcatch();
 }
 
@@ -127,9 +136,9 @@ void _panic(const char* func, const char *message) {
     console.write("\nMessage: ", true);
     console.write(message, true);
     console.writeLine("", true);
-    console.write("PANIC ON ");
+    console.write("PANIC ON CPU#");
     console.write((int)smplow::get_core_id());
-    console.writeLine(" CPU");
+    console.writeLine("");
     while (' ' != console.readChar()) {}
     console.clear();
 #ifdef stage2
@@ -147,16 +156,15 @@ void _panic(const char* func, const char *message) {
 #endif
 
     console.writeLine("System halted", true);
-    console.write("PANIC ON ");
+    console.write("PANIC ON CPU#");
     console.write((int)smplow::get_core_id());
-    console.writeLine(" CPU");
+    console.writeLine("");
 
     while (true) { asm volatile ("hlt"); }
 }
 
 [[noreturn]] void stop() {
-    //debug_trap();
-    while (true) { asm volatile ("hlt"); }
+        while (true) { asm volatile ("hlt"); }
 }
 
 extern "C" {

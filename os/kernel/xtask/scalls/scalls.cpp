@@ -1,4 +1,5 @@
 #include "../../CPU/cpu.cpp"
+#include "../xtask.cpp"
 
 /* Типичные POSIX коды ошибок */
 #define EPERM    1   /* Operation not permitted */
@@ -38,12 +39,12 @@
 #define ENOSYS   38  /* Function not implemented */
 
 struct _hnSyscall {
-    static int tester(registers_t*) {
+    static int tester(xtask::context_t*) {
         _kcons::console.write("pidarasik");
         return 0;
     }
 };
 
-int (*scalls[])(registers_t*) = {
+int (*scalls[])(xtask::context_t*) = {
     &_hnSyscall::tester
 };

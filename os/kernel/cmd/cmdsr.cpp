@@ -14,8 +14,7 @@ int cmdsr(const managed<string>& args) {
     CHECK(1)
     string com = args[0];
     if (com == "test") {
-        serial0 << "testing serial0 out port" << endl;
-    } else {
+            } else {
         kout << "UNKNOWN COMMAND: " << '"' << com << '"' << endl;
         return 1;
     }

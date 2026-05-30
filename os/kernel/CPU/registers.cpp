@@ -63,17 +63,11 @@ extern "C" void get_all_registers(registers_t *regs) {
 }
 
 static inline void restore_registers(registers_t *regs) {
-    //__asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%cs" : : "m"(regs->cs) : "rax");
-    __asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%ds" : : "m"(regs->ds) : "rax");
+        __asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%ds" : : "m"(regs->ds) : "rax");
     __asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%es" : : "m"(regs->es) : "rax");
     __asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%fs" : : "m"(regs->fs) : "rax");
     __asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%gs" : : "m"(regs->gs) : "rax");
-    //__asm__ volatile ("movzwq %0, %%rax\n\t mov %%ax, %%ss" : : "m"(regs->ss) : "rax");
-    //__asm__ volatile ("movq %0, %%rax\n\t mov %%rax, %%cr0" : : "m"(regs->cr0) : "rax");
-    //__asm__ volatile ("movq %0, %%rax\n\t mov %%rax, %%cr2" : : "m"(regs->cr2) : "rax");
-    //__asm__ volatile ("movq %0, %%rax\n\t mov %%rax, %%cr3" : : "m"(regs->cr3) : "rax");
-    //__asm__ volatile ("movq %0, %%rax\n\t mov %%rax, %%cr4" : : "m"(regs->cr4) : "rax");
-    __asm__ volatile ("movq %0, %%rax" : : "m"(regs->rax) : "rax");
+                        __asm__ volatile ("movq %0, %%rax" : : "m"(regs->rax) : "rax");
     __asm__ volatile ("movq %0, %%rbx" : : "m"(regs->rbx) : "rbx");
     __asm__ volatile ("movq %0, %%rcx" : : "m"(regs->rcx) : "rcx");
     __asm__ volatile ("movq %0, %%rdx" : : "m"(regs->rdx) : "rdx");
@@ -87,9 +81,7 @@ static inline void restore_registers(registers_t *regs) {
     __asm__ volatile ("movq %0, %%r13" : : "m"(regs->r13) : "r13");
     __asm__ volatile ("movq %0, %%r14" : : "m"(regs->r14) : "r14");
     __asm__ volatile ("movq %0, %%r15" : : "m"(regs->r15) : "r15");
-    //__asm__ volatile ("ret");
-    //__asm__ volatile ("movq %0, %%rax\n\t push %%rax\n\t popfq" : : "m"(regs->rflags) : "rax");
-}
+        }
 
 extern "C" void get_basic_registers(registers_t *regs) {
     if (!regs) return;

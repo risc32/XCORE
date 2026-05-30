@@ -18,13 +18,16 @@ start /b gcc os/kernel/middle.cpp -w -o prep/midprep.asm -S -DPREP -fpermissive 
 if errorlevel 1 exit /b 1
 
 REM 64-bit компиляция
-x86_64-elf-g++ -g -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive -fno-use-cxa-atexit -O0 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -mno-avx -Iinclude
+x86_64-elf-g++ -g -w -m64 -std=c++23 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/kernel.cpp -o build/kernel.o -fpermissive -fno-use-cxa-atexit -O0 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -mno-avx -Iinclude
 if errorlevel 1 exit /b 1
 
-x86_64-elf-g++ -g -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/middle.cpp -o build/middle.o -fpermissive -fno-use-cxa-atexit -O0 -D stage2 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -mno-avx -Iinclude
+x86_64-elf-g++ -g -w -m64 -std=c++23 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c os/kernel/middle.cpp -o build/middle.o -fpermissive -fno-use-cxa-atexit -O0 -D stage2 -mcmodel=kernel -mno-red-zone -fno-pic -fno-pie -mno-avx -Iinclude
 if errorlevel 1 exit /b 1
 
-x86_64-elf-ld -g -m elf_x86_64 -Ttext 0x200000 -o build/kernel.bin --oformat binary build/kernel.o objects/ff.o objects/diskio.o objects/ffsystem.o objects/ffunicode.o objects/logo.o
+x86_64-elf-ld -g -m elf_x86_64 -T linker/linker.ld -o build/kernel.elf build/kernel.o objects/ff.o objects/diskio.o objects/ffsystem.o objects/ffunicode.o objects/logo.o
+if errorlevel 1 exit /b 1
+
+x86_64-elf-objcopy -O binary build/kernel.elf build/kernel.bin
 if errorlevel 1 exit /b 1
 
 x86_64-elf-ld -g -w -m elf_x86_64 -Ttext 0x15000 -o build/middle.bin --oformat binary build/middle.o

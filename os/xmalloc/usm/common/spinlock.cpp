@@ -10,8 +10,7 @@ namespace xmalloc {
             while (locked) {
                 asm volatile ("pause");
             }
-            //__atomic_add_fetch(&locked, true, );
-        }
+                    }
         void unlock() {
             locked = false;
         }

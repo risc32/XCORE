@@ -92,8 +92,6 @@ extern "C" void middle() {
 
     outb(0x3D4, 0x0A);
     outb(0x3D5, 0x20);
-    //super_block sb = {};
-    //driver.read(1, 1, sb.data);
 
     uint64_t kernel_address = 0;
 

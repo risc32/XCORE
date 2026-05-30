@@ -26,7 +26,6 @@ void pit_init25() {
 
 void pit_initms(int ms) {
     pit_init(1000 / ms);
-    //enable_irq0();
 
     asm volatile("sti");
 }

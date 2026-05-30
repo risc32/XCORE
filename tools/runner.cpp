@@ -18,9 +18,9 @@ int main() {
     std::vector<uint32_t> pixels;
     int width, height;
 
-    if (png_to_int_array("img.png", pixels, width, height)) {
+    if (png_to_int_array("logo.png", pixels, width, height)) {
         generate_cpp_code("logo", pixels, width, height, "logo.cpp");
-        std::cout << "Сгенерирован файл icon_data.cpp\n";
+        std::cout << "good\n";
     }
 
     system("x86_64-elf-g++ -g -w -m64 -march=x86-64 -ffreestanding -nostdlib -fno-rtti -c logo.cpp -o ../objects/logo.o");

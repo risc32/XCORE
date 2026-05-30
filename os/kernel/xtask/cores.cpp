@@ -43,7 +43,7 @@ namespace cores {
     xtask::Core* find_best() {
         xtask::Core* m = &xtask::cores[0];
         for (auto& core : xtask::cores) {
-            if (core.tasks.size() < m->tasks.size()) {
+            if (core.tasks.size() < m->tasks.size() && core.present) {
                 m = &core;
             }
         }

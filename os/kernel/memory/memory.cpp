@@ -89,11 +89,13 @@ void *calloc(size_t num, size_t size) {
     return ptr;
 }
 
-void* operator new(size_t size) { return malloc(size); }
-void* operator new[](size_t size) { return malloc(size); }
+void* operator new(size_t size) { return promise(size); }
+void* operator new[](size_t size) { return promise(size); }
 void operator delete(void* p) noexcept { free(p); }
 void operator delete[](void* p) noexcept { free(p); }
 void operator delete(void* p, size_t) noexcept { free(p); }
+inline void* operator new(size_t, void* ptr) noexcept {return ptr;}
+inline void* operator new[](size_t, void* ptr) noexcept {return ptr;}
 
 void memory::init() {
     kheap.init(heap, HEAP_SIZE);

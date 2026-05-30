@@ -8,9 +8,11 @@ struct _serial0: ostream {
         s0::put(string(buffer.c_str()).c_str());
     }
 
-    static void init();
-} serial0;
+    _serial0 () : ostream{0x6266} {}
 
-void _serial0::init() {
-    serial0 = {};
-}
+    };
+//
+GLOBAL(_serial0, serial0);
+
+
+

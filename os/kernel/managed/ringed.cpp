@@ -16,6 +16,10 @@ public:
         return managed<T>::operator[](_current % this->size());
     }
 
+    void pop_current() {
+        managed<T>::remove(_current % this->size());
+    }
+
     void reset() {
         _current = 0;
     }

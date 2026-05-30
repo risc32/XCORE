@@ -68,7 +68,7 @@ void set_idt_gate64(uint8_t num, uint64_t base, uint16_t selector, uint8_t flags
     idt64[num].zero = 0;
 }
 
-#define GATE(x) set_idt_gate64(x, (uint64_t)isr##x, 0x08, 0x8E);
+#define GATE(x) set_idt_gate64(x, (uint64_t)isr##x, 0x08, 0xEE);
 
 void init_idt64() {
 

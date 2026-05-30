@@ -1,1 +1,1 @@
-qemu-system-x86_64 -smp 4 -drive format=raw,file=os.img -vga std -display gtk,show-tabs=on -monitor stdio -m 8G -d int,cpu_reset -cpu max -s %*
+qemu-system-x86_64 -no-reboot -no-shutdown -smp 1 -drive format=raw,file=os.img -vga vmware -display gtk,show-tabs=on -monitor stdio -m 8G -d int,cpu_reset -cpu max -s %*

@@ -14,6 +14,9 @@ Main:
     jmp 0x0000:.FlushCS               ; Фиксируем CS на 0x0000
 
 .FlushCS:
+
+
+
     xor ax, ax
     mov ds, ax
     mov es, ax

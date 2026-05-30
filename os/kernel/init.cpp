@@ -13,9 +13,20 @@ namespace s0{
 
     void puthex(int c);
 }
-
+extern "C" void zero_bss();
 extern "C" void kernel_entry() {
+    zero_bss();
     endloader();
+}
+
+extern "C" void zero_bss() {
+    extern char _bss_start[], _bss_end[];
+    volatile char* start = _bss_start;
+    volatile char* end = _bss_end;
+
+    for (char* p = (char*)start; p < (char*)end; p++) {
+        *p = 0;
+    }
 }
 
 #include "graphics/text/console.hpp"
@@ -35,9 +46,7 @@ extern "C" void kernel_entry() {
 uint64_t getstack() {
     uint64_t sp;
     asm volatile("mov %%rsp, %0" : "=r"(sp));
-    s0::put("\n\rstack: ");
-    s0::puthex(sp);
-    s0::put("\n\r");
+
     return sp;
 }
 
@@ -73,7 +82,6 @@ extern "C" [[noreturn]] void endloader() {
             );
 
     exception::init();
-    //disk::init();
 
     __asm__ volatile(
         "cli\n\t"
@@ -109,7 +117,6 @@ extern "C" [[noreturn]] void endloader() {
 #include "graphics/graphics.cpp"
 
 #include "crypto/uuid.cpp"
-//#include "fatfs"
 
 #define GBPAG 8
 
@@ -151,23 +158,114 @@ void mathtest(int cell = 64) {
     Screen::frame();
 }
 
+
+bool mmstmin() {
+    constexpr int count = 32;
+    void* p[count]{};
+    for (int i = 0; i < count; ++i) {
+        p[i] = allocate(128);
+
+    }
+    for (int i = count - 1; i >= 0; --i) {
+        if (!p[i]) {
+            return false;
+        }
+        free(p[i]);
+    }
+    return true;
+}
+void test_center_square() {
+    Screen::clear(BLACK);
+
+    uint16_t center = 8192;
+    uint16_t size = 5000;
+    for (int i = 0; i < 128; i) {
+        x16G::_idraw_aa(center+=x16G::pixelstep, 8192, WHITE);
+
+        wait(9990000);
+        x16G::frame();
+            }
+
+}
+
+void OPT3 draw_circle(uint16_t center_x, uint16_t center_y, uint16_t radius, uint32_t color) {
+    int16_t x = 0;
+    int16_t y = radius;
+    int16_t d = 3 - 2 * radius;
+
+    while (x <= y) {
+
+        x16G::_idraw_aa(center_x + x, center_y + y, color);
+        x16G::_idraw_aa(center_x - x, center_y + y, color);
+        x16G::_idraw_aa(center_x + x, center_y - y, color);
+        x16G::_idraw_aa(center_x - x, center_y - y, color);
+        x16G::_idraw_aa(center_x + y, center_y + x, color);
+        x16G::_idraw_aa(center_x - y, center_y + x, color);
+        x16G::_idraw_aa(center_x + y, center_y - x, color);
+        x16G::_idraw_aa(center_x - y, center_y - x, color);
+
+        x++;
+
+        if (d < 0) {
+            d = d + 4 * x + 6;
+        } else {
+            y--;
+            d = d + 4 * (x - y) + 10;
+        }
+    }
+}
+
+void OPT3 test16g() {
+    int x = 100, y = 100, r = 512;
+    while (1) {
+                x16G::_idraw_rect_aa(x++, y++, x, y, WHITE);
+        x16G::frame();
+        x16G::clear();
+            }
+}
+
+#include <speedmessage>
+
+extern "C" {
+typedef void (*constructor_t)();
+
+extern constructor_t __init_array_start[];
+extern constructor_t __init_array_end[];
+
+void constructors() {
+    size_t count = __init_array_end - __init_array_start;
+    for (size_t i = 0; i < count; i++) {
+        __init_array_start[i]();
+    }
+}
+}
+extern const uint32_t logo_data[1573112];
+extern const int logo_width;
+extern const int logo_height;
 void init() {
     get_fs();
     s0::put("void _start() KERNEL 0x20000 .text\n");
     _kcons::init();
 
     memory::init();
+
     autotest();
 
     cmd::init();
 
-    //filesystem::init();
-    PageHeap::init();
-    paging::gmap(0, 8);
+        PageHeap::init();
+    constructors();
 
     VESADriver::init();
     FontManager::init();
     Screen::set_font("ibmvga");
+
+    Raster r = {logo_data, logo_width, logo_height};
+    r.prepare(Screen::info);
+    r.drawcenter(Screen::buffer);
+    Screen::frame();
+
+    paging::gmap(0, 8);
 
     Syscall::init();
     x16G::init();
@@ -177,8 +275,10 @@ void init() {
     disk::init();
 
     Time::init();
+    Component::init();
+
     xtask::init();
 
-    //setlapic((void*)cores::baselapic);
-}
+
+    }
 
